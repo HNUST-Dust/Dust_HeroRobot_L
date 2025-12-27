@@ -11,7 +11,6 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "app_gimbal.h"
-#include "alg_math.h"
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -29,12 +28,12 @@ void Gimbal::Init()
 {
     // yaw轴角度环pid
     yaw_angle_pid_.Init(
-        12.0f,
-        0.05f,
-        0.5f,
-        0.0f,
+        17.2f,
+        0.8f,
+        2.65f,
+        1.0f,
         0.f,
-        44.0f,
+        30.0f,
         0.001f,
         0.0f,
         0.0f,
@@ -45,10 +44,10 @@ void Gimbal::Init()
     );
     // yaw轴速度环pid
     yaw_omega_pid_.Init(
-        0.5f,
-        0.008f,
-        0.0002f,
-        0.0f,
+        0.65f,
+        0.08f,
+        0.00305f,
+        0.2f,
         0.0f,
         9.9f,
         0.001f,
@@ -62,33 +61,35 @@ void Gimbal::Init()
     // yaw轴速度环滤波器
     yaw_omega_filter_.Init(15.0f, 0.001f);
 
+    yaw_autoaim_filter_.Init(20.f, 0.001f);
+
     // 4310电机初始化
-    motor_yaw_.Init(&hcan2, 0x06, 0x05);
+    motor_yaw_.Init(&hcan2, 0x06, 0x05, MOTOR_DM_CONTROL_METHOD_NORMAL_MIT, 12.5f, 30.f, 10.f);
 
     // 发送清除错误指令
     motor_yaw_.CanSendClearError();
-    osDelay(pdMS_TO_TICKS(900));
+    osDelay(pdMS_TO_TICKS(1000));
     
     // 保存零点（当云台与底盘上电有偏差时需重新设置零点）
     motor_yaw_.CanSendSaveZero();
-    osDelay(pdMS_TO_TICKS(900));
+    osDelay(pdMS_TO_TICKS(1000));
 
     // 发送使能命令
     motor_yaw_.CanSendEnter();
-    osDelay(pdMS_TO_TICKS(900));
+    osDelay(pdMS_TO_TICKS(1000));
 
-    // 小Kp粗调
-    motor_yaw_.SetKp(0.8);    // MIT模式kp
-    motor_yaw_.SetKd(0.3);    // MIT模式kd
-    motor_yaw_.SetControlAngle(0);
-    motor_yaw_.Output();
-    osDelay(pdMS_TO_TICKS(1300));
-    // 大Kp细调
-    motor_yaw_.SetKp(10.0);    // MIT模式kp
-    motor_yaw_.SetKd(1.0);    // MIT模式kd
-    motor_yaw_.SetControlAngle(0);
-    motor_yaw_.Output();
-    osDelay(pdMS_TO_TICKS(500));
+    // // 小Kp粗调
+    // motor_yaw_.SetKp(0.8);    // MIT模式kp
+    // motor_yaw_.SetKd(0.3);    // MIT模式kd
+    // motor_yaw_.SetControlAngle(0);
+    // motor_yaw_.Output();
+    // osDelay(pdMS_TO_TICKS(1300));S
+    // // 大Kp细调
+    // motor_yaw_.SetKp(10.0);    // MIT模式kp
+    // motor_yaw_.SetKd(1.0);    // MIT模式kd
+    // motor_yaw_.SetControlAngle(0);
+    // motor_yaw_.Output();
+    // osDelay(pdMS_TO_TICKS(500));
 
     // 力矩控制
     motor_yaw_.SetKp(0);  // MIT模式kp
@@ -156,7 +157,6 @@ void Gimbal::SelfResolution()
 void Gimbal::Output()
 {
     motor_yaw_.SetControlTorque(target_yaw_torque_);
-    // motor_yaw_.SetControlTorque(0);
 
     motor_yaw_.Output();
 }

@@ -11,7 +11,6 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "app_reload.h"
-#include "stdio.h"
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -28,8 +27,7 @@
 void Reload::Init()
 {
     // 拨弹盘4310电机初始化
-    motor_reload_.Init(&hcan2, 0x08, 0x07, MOTOR_DM_CONTROL_METHOD_NORMAL_MIT, 
-                    12.5f, 50.0f, 10.0f, 10.261194f);
+    motor_reload_.Init(&hcan2, 0x08, 0x07, MOTOR_DM_CONTROL_METHOD_NORMAL_MIT, 12.5f, 30.f, 10.f);
     
     motor_reload_.CanSendClearError();
     osDelay(pdMS_TO_TICKS(1000));
@@ -39,9 +37,9 @@ void Reload::Init()
 
     motor_reload_.SetKp(0);
 
-    motor_reload_.SetKd(0.3);
+    motor_reload_.SetKd(0);
 
-    motor_reload_.SetControlOmega(0);
+    motor_reload_.SetControlTorque(0);
 
     motor_reload_.Output();
 
@@ -93,11 +91,19 @@ void Reload::Output()
  */
 void Reload::Task()
 {
+    uint32_t count = 0;
+
     for(;;)
     {
+        if(++count >= 20)
+        {
+            motor_reload_.AlivePeriodElapsedCallback();
+            count = 0;
+        }
+
         Output();
         SelfResolution();
-        printf("%f,%f\n", target_reload_rotation_, now_reload_torque_);
+
         osDelay(pdMS_TO_TICKS(1));
     }
 }

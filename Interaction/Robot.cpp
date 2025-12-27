@@ -11,7 +11,6 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "Robot.h"
-#include "dvc_MCU_comm.h"
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -144,7 +143,7 @@ void Robot::Task()
                 {
                     float filtered_autoaim = gimbal_.yaw_autoaim_filter_.Update(mcu_autoaim_data_local.autoaim_yaw_ang.f);
 
-                    remote_yaw_angle_ += filtered_autoaim / 120.f;
+                    remote_yaw_angle_ += filtered_autoaim / 150.f;
 
                     gimbal_.SetTargetYawRadian(remote_yaw_angle_);
 
@@ -154,10 +153,9 @@ void Robot::Task()
                 {
                     float filtered_autoaim = gimbal_.yaw_autoaim_filter_.Update(mcu_autoaim_data_local.autoaim_yaw_ang.f);
 
-                    remote_yaw_angle_ += filtered_autoaim / 120.f;
+                    remote_yaw_angle_ += filtered_autoaim / 150.f;
 
                     gimbal_.SetTargetYawRadian(remote_yaw_angle_);
-                    // reload_.SetTargetReloadRotation(MAX_RELOAD_SPEE );
 
                     break;
                 }
@@ -177,7 +175,7 @@ void Robot::Task()
 
 
         // 设置当前角度差
-        chassis_.SetNowYawAngleDiff(-gimbal_.GetNowYawRadian());
+        chassis_.SetNowYawAngleDiff(gimbal_.GetNowYawRadian());
         // 设置目标映射速度
         chassis_.SetTargetVxInGimbal((K * mcu_chassis_data_local.chassis_speed_x + C) * MAX_OMEGA_SPEED);
         chassis_.SetTargetVyInGimbal((K * mcu_chassis_data_local.chassis_speed_y + C) * MAX_OMEGA_SPEED);
@@ -192,28 +190,31 @@ void Robot::Task()
             case SWITCH_UP:
             {
                 chassis_.SetTargetVelocityRotation(MAX_GYROSCOPE_SPEED);
+
                 break;
             }
             case SWITCH_MID:
             {
                 chassis_.SetTargetVelocityRotation(0);
+
                 break;
             }
             case SWITCH_DOWN:
             {
-                // chassis_angle_diff = CalcYawError(remote_yaw_angle_ ,imu_.GetYawRadian());
+                chassis_angle_diff = CalcYawError(remote_yaw_angle_ ,imu_.GetYawRadian());
 
-                // chassis_.chassis_follow_pid_.SetTarget(0);
-                // chassis_.chassis_follow_pid_.SetNow(chassis_angle_diff);
-                // chassis_.chassis_follow_pid_.CalculatePeriodElapsedCallback();
+                chassis_.chassis_follow_pid_.SetTarget(0);
+                chassis_.chassis_follow_pid_.SetNow(chassis_angle_diff);
+                chassis_.chassis_follow_pid_.CalculatePeriodElapsedCallback();
 
-                // chassis_.SetTargetVelocityRotation(chassis_.chassis_follow_pid_.GetOut());
+                chassis_.SetTargetVelocityRotation(chassis_.chassis_follow_pid_.GetOut());
 
                 break;
             }
             default:
             {
                 chassis_.SetTargetVelocityRotation(0);
+                
                 break;
             }
         }

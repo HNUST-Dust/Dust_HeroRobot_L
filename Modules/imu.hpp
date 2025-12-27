@@ -2,11 +2,12 @@
 #define IMU_H_
 
 #include "BMI088driver.h"
+#include "alg_math.h"
 #include "spi.h"
 #include "ins_task.h"
 #include "cmsis_os2.h"
 #include "FreeRTOS.h"
-
+#include "user_lib.h"
 
 class Imu 
 {
@@ -31,7 +32,7 @@ public:
     void Init()
     {
         // 陀螺仪初始化
-        BMI088_Init(&hspi1, 0);// 不启用校准模式    
+        BMI088_Init(&hspi1, 1);// 不启用校准模式    
         INS_Init(); // 逆时针为+ ，-180 ~ 180
         static const osThreadAttr_t ImuTaskAttr = {
             .name = "ImuTask",
@@ -47,9 +48,9 @@ public:
         return INS.Yaw;
     }
 
-    inline float GetYawAngleTotalAngle()
+    inline float GetYawRadian()
     {
-        return INS.YawTotalAngle;
+        return normalize_angle_pm_pi(INS.Yaw);
     }
 
     inline float GetTemperature()
