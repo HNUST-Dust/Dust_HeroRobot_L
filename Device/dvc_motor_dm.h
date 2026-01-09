@@ -274,6 +274,7 @@ public:
 
     // 单元测试临时添加输出函数
     void Output();
+
 protected:
     // 初始化相关变量
 
@@ -300,6 +301,8 @@ protected:
     uint32_t flag_ = 0;
     // 前一时刻的电机接收flag
     uint32_t pre_flag_ = 0;
+    // 在线计数
+    uint8_t alive_count_ = 0;
 
     // 发送缓冲区
     uint8_t tx_data_[8];

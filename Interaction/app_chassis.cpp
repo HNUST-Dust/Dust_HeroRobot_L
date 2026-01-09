@@ -14,6 +14,9 @@
 
 /* Private macros ------------------------------------------------------------*/
 
+#define dt      0.001f
+#define MAX_GYROSCOPE_SPEED     25.f
+
 /* Private types -------------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
@@ -41,16 +44,16 @@ void Chassis::Init()
         0.0f  
     );
     
-    motor_chassis_1_.Init(&hcan1, MOTOR_DJI_ID_0x201, MOTOR_DJI_CONTROL_METHOD_OMEGA);
-    motor_chassis_2_.Init(&hcan1, MOTOR_DJI_ID_0x202, MOTOR_DJI_CONTROL_METHOD_OMEGA);
-    motor_chassis_3_.Init(&hcan1, MOTOR_DJI_ID_0x203, MOTOR_DJI_CONTROL_METHOD_OMEGA);
-    motor_chassis_4_.Init(&hcan1, MOTOR_DJI_ID_0x204, MOTOR_DJI_CONTROL_METHOD_OMEGA);
-
     // 底盘3508电机初始化
     motor_chassis_1_.pid_omega_.Init(2.0f,0.f,0.0007f);
     motor_chassis_2_.pid_omega_.Init(2.0f,0.f,0.0007f);
     motor_chassis_3_.pid_omega_.Init(2.0f,0.f,0.0007f);
     motor_chassis_4_.pid_omega_.Init(2.0f,0.f,0.0007f);
+    
+    motor_chassis_1_.Init(&hcan1, MOTOR_DJI_ID_0x201, MOTOR_DJI_CONTROL_METHOD_OMEGA);
+    motor_chassis_2_.Init(&hcan1, MOTOR_DJI_ID_0x202, MOTOR_DJI_CONTROL_METHOD_OMEGA);
+    motor_chassis_3_.Init(&hcan1, MOTOR_DJI_ID_0x203, MOTOR_DJI_CONTROL_METHOD_OMEGA);
+    motor_chassis_4_.Init(&hcan1, MOTOR_DJI_ID_0x204, MOTOR_DJI_CONTROL_METHOD_OMEGA);
 
     motor_chassis_1_.SetTargetOmega(0.0f);
     motor_chassis_2_.SetTargetOmega(0.0f);
@@ -79,13 +82,52 @@ void Chassis::TaskEntry(void *argument)
 }
 
 /**
+ * @brief Chassis操作模式
+ * 
+ */
+void Chassis::OperationMode()
+{
+    switch (chassis_opreation_mode_)
+    {
+        case (CHASSIS_OPERATION_MODE_SPIN):
+        {
+            SetTargetVelocityRotation(MAX_GYROSCOPE_SPEED);
+
+            break;
+        }
+        case (CHASSIS_OPERATION_MODE_NORMAL):
+        {
+            SetTargetVelocityRotation(0);
+
+            break;
+        }
+        case (CHASSIS_OPERATION_MODE_FOLLOW):
+        {
+            chassis_follow_pid_.SetTarget(0);
+            chassis_follow_pid_.SetNow(yaw_radian_diff_);
+            chassis_follow_pid_.CalculatePeriodElapsedCallback();
+
+            SetTargetVelocityRotation(chassis_follow_pid_.GetOut());
+
+            break;
+        }
+        default:
+        {
+            SetTargetVelocityRotation(0);
+            break;
+        }
+        
+    }
+}
+
+/**
  * @brief Chassis旋转矩阵变换
  * 
  */
 void Chassis::RotationMatrixTransform()
 {
-    cos_theta_ = cosf(now_yawdiff_);
-    sin_theta_ = sinf(now_yawdiff_);
+    float cos_theta_ = cosf(yaw_radian_diff_);
+    float sin_theta_ = sinf(yaw_radian_diff_);
     target_vx_in_chassis_ = cos_theta_ * target_vx_in_gimbal_ - sin_theta_ * target_vy_in_gimbal_;
     target_vy_in_chassis_ = sin_theta_ * target_vx_in_gimbal_ + cos_theta_ * target_vy_in_gimbal_;
 }
@@ -98,7 +140,7 @@ void Chassis::SlopePlanning()
 {
     now_accel_x_ = (target_vx_in_chassis_ - last_target_vx_) / dt;
     now_accel_y_ = (target_vy_in_chassis_ - last_target_vy_) / dt;
-    now_accel_r_ = (target_velocity_rotation_ - last_target_r_) / dt;
+    now_accel_r_ = (target_velocity_rotation_ - last_target_rotation_) / dt;
 
     if(fabs(now_accel_x_) > max_accel_xy_)
     {
@@ -130,21 +172,21 @@ void Chassis::SlopePlanning()
 
     if(fabs(now_accel_r_) > max_accel_r_)
     {
-        if(target_velocity_rotation_ > last_target_r_) 
+        if(target_velocity_rotation_ > last_target_rotation_) 
         {
-            target_velocity_rotation_ = (last_target_r_ + max_accel_r_ * dt) < target_velocity_rotation_ ? 
-                                        (last_target_r_ + max_accel_r_ * dt) : target_velocity_rotation_;
+            target_velocity_rotation_ = (last_target_rotation_ + max_accel_r_ * dt) < target_velocity_rotation_ ? 
+                                        (last_target_rotation_ + max_accel_r_ * dt) : target_velocity_rotation_;
         } 
         else
         {
-            target_velocity_rotation_ = (last_target_r_ - max_accel_r_ * dt) > target_velocity_rotation_ ? 
-                                        (last_target_r_ - max_accel_r_ * dt) : target_velocity_rotation_;
+            target_velocity_rotation_ = (last_target_rotation_ - max_accel_r_ * dt) > target_velocity_rotation_ ? 
+                                        (last_target_rotation_ - max_accel_r_ * dt) : target_velocity_rotation_;
         }
     }
 
     last_target_vx_ = target_vx_in_chassis_;
     last_target_vy_ = target_vy_in_chassis_;
-    last_target_r_  = target_velocity_rotation_;
+    last_target_rotation_  = target_velocity_rotation_;
 }
 
 /**
@@ -183,6 +225,8 @@ void Chassis::Task()
 {
     for (;;)
     {
+        // 操作模式
+        OperationMode();
         // 旋转矩阵转换
         RotationMatrixTransform();
         // 斜坡规划算法

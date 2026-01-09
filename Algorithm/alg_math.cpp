@@ -230,15 +230,6 @@ float get_relative_angle_pm_pi(float now_angle_cum, float zero_angle)
     return rel;
 }
 
-float normalize_angle_diff(float target, float now)
-{
-    float error = target - now;
-    if (error > M_PI)
-        error -= 2.0f * M_PI;
-    else if (error < -M_PI)
-        error += 2.0f * M_PI;
-    return error;
-}
 /**
  * @brief 计算云台yaw轴角度误差（考虑跨零与跨π情况）
  * @param target 目标角度（单位：rad，范围 -π~π）

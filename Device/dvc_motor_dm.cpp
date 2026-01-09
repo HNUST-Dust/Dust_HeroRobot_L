@@ -299,24 +299,28 @@ void MotorDmNormal::CanSendSaveZero()
  */
 void MotorDmNormal::AlivePeriodElapsedCallback()
 {
-    // 判断该时间段内是否接收过电机数据
-    if (flag_ == pre_flag_)
+    if(++alive_count_ >= 10)
     {
-        // 电机断开连接
-        motor_dm_status_ = MOTOR_DM_STATUS_DISABLE;
-    }
-    else
-    {
-        // 电机保持连接
-        motor_dm_status_ = MOTOR_DM_STATUS_ENABLE;
-    }
+        // 判断该时间段内是否接收过电机数据
+        if (flag_ == pre_flag_)
+        {
+            // 电机断开连接
+            motor_dm_status_ = MOTOR_DM_STATUS_DISABLE;
+        }
+        else
+        {
+            // 电机保持连接
+            motor_dm_status_ = MOTOR_DM_STATUS_ENABLE;
+        }
 
-    pre_flag_ = flag_;
+        pre_flag_ = flag_;
 
-    if(motor_dm_status_ == MOTOR_DM_STATUS_DISABLE)
-    {
-        CanSendClearError();
-        CanSendEnter();
+        if(motor_dm_status_ == MOTOR_DM_STATUS_DISABLE)
+        {
+            CanSendClearError();
+        }
+
+        alive_count_ = 0;
     }
 }
 

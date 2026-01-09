@@ -18,6 +18,7 @@
 #include "cmsis_os2.h"
 #include "string.h"
 #include "stdio.h"
+#include "dvc_remote_dji.h"
 
 /* Exported macros -----------------------------------------------------------*/
 
@@ -34,14 +35,13 @@ union McuConv
 };
 
 /**
- * @brief 遥控状态枚举
+ * @brief Mcu存活状态枚举
  * 
  */
-enum RemoteSwitchStatus
+enum McuAliveState
 {
-    SWITCH_UP    = (uint8_t)1,
-    SWITCH_MID   = (uint8_t)3,
-    SWITCH_DOWN  = (uint8_t)2,
+    MCU_ALIVE_STATE_ENABLE = 0,
+    MCU_ALIVE_STATE_DISABLE,
 };
 
 /**
@@ -130,16 +130,15 @@ public:
 
     void Init(CAN_HandleTypeDef *hcan, uint8_t can_rx_id, uint8_t can_tx_id);
 
-    void CanRxCpltCallback(uint8_t *rx_data);
-
-    void CanSendCommand();
-
-    void CanSendAutoaim();
-
     void Task();
 
+    void ClearData();
 
-protected:
+    void CanRxCpltCallback(uint8_t *rx_data);
+
+    inline McuAliveState GetMcuAliveState();
+
+private:
 
     CanManageObject *can_manage_object_;
 
@@ -149,7 +148,17 @@ protected:
 
     uint8_t tx_data_[8];
 
-    void DataProcess();
+    uint32_t flag_ = 0;
+
+    uint32_t pre_flag_ = 0;
+
+    uint32_t alive_count_ = 0;
+
+    McuAliveState mcu_alive_state_ = MCU_ALIVE_STATE_DISABLE;
+
+    void DataProcess(uint8_t* rx_data);
+
+    void AlivePeriodElapsedCallback();
 
     // FreeRTOS 入口，静态函数
     static void TaskEntry(void *param);
@@ -158,5 +167,10 @@ protected:
 /* Exported variables ---------------------------------------------------------*/
 
 /* Exported function declarations ---------------------------------------------*/
+
+inline McuAliveState McuComm::GetMcuAliveState()
+{
+    return (mcu_alive_state_);
+}
 
 #endif

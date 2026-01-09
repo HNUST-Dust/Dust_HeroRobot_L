@@ -11,13 +11,15 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "Robot.h"
+#include "app_reload.h"
+#include "dvc_MCU_comm.h"
 
 /* Private macros ------------------------------------------------------------*/
 
 #define K                       1.f / 660.f
 #define C                       -256.f / 165.f
 #define MAX_OMEGA_SPEED         20.f
-#define MAX_GYROSCOPE_SPEED     25.f
+#define REMOTE_YAW_RATIO        0.5f
 
 /* Private types -------------------------------------------------------------*/
 
@@ -43,7 +45,7 @@ void Robot::Init()
     imu_.Init();
 
     // 10s时间等待陀螺仪收敛
-    osDelay(pdMS_TO_TICKS(10 * 1000));
+    osDelay(pdMS_TO_TICKS(1 * 1000));
 
     // 拨弹盘初始化
     reload_.Init();
@@ -98,8 +100,7 @@ void Robot::Task()
     McuRecvAutoaimData mcu_autoaim_data_local;
     mcu_autoaim_data_local.autoaim_yaw_ang.f   = 0;
 
-    // 底盘yaw角角度差，用于底盘跟随
-    float chassis_angle_diff = 0.0f;
+    float chassis_angle_diff = 0.0;
 
     for(;;)
     {
@@ -119,11 +120,11 @@ void Robot::Task()
 
         if(mcu_comm_data_local.switch_r == SWITCH_MID)
         {
-            remote_yaw_angle_ += (M_PI / 180.f * (K * mcu_chassis_data_local.rotation + C)) * 0.5;
+            remote_yaw_radian_ += (M_PI / 180.f * (K * mcu_chassis_data_local.rotation + C)) * REMOTE_YAW_RATIO;
 
-            remote_yaw_angle_ = normalize_pi(remote_yaw_angle_);
+            remote_yaw_radian_ = normalize_pi(remote_yaw_radian_);
 
-            gimbal_.SetTargetYawRadian(remote_yaw_angle_);
+            gimbal_.SetTargetYawRadian(remote_yaw_radian_);
         }
         else if(mcu_comm_data_local.switch_r == SWITCH_UP)
         {
@@ -131,11 +132,13 @@ void Robot::Task()
             {
                 case(AUTOAIM_MODE_IDIE):
                 {
-                    remote_yaw_angle_ += (M_PI / 180.f * (K * mcu_chassis_data_local.rotation + C)) * 0.5;
+                    remote_yaw_radian_ += (M_PI / 180.f * (K * mcu_chassis_data_local.rotation + C)) * REMOTE_YAW_RATIO;
 
-                    remote_yaw_angle_ = normalize_pi(remote_yaw_angle_);
+                    remote_yaw_radian_ = normalize_pi(remote_yaw_radian_);
 
-                    gimbal_.SetTargetYawRadian(remote_yaw_angle_);
+                    gimbal_.SetTargetYawRadian(remote_yaw_radian_);
+
+                    reload_.SetTargetReloadTorque(0);
 
                     break;
                 }
@@ -143,9 +146,11 @@ void Robot::Task()
                 {
                     float filtered_autoaim = gimbal_.yaw_autoaim_filter_.Update(mcu_autoaim_data_local.autoaim_yaw_ang.f);
 
-                    remote_yaw_angle_ += filtered_autoaim / 150.f;
+                    remote_yaw_radian_ += filtered_autoaim / 150.f;
 
-                    gimbal_.SetTargetYawRadian(remote_yaw_angle_);
+                    gimbal_.SetTargetYawRadian(remote_yaw_radian_);
+
+                    reload_.SetTargetReloadTorque(0);
 
                     break;
                 }
@@ -153,29 +158,43 @@ void Robot::Task()
                 {
                     float filtered_autoaim = gimbal_.yaw_autoaim_filter_.Update(mcu_autoaim_data_local.autoaim_yaw_ang.f);
 
-                    remote_yaw_angle_ += filtered_autoaim / 150.f;
+                    remote_yaw_radian_ += filtered_autoaim / 150.f;
 
-                    gimbal_.SetTargetYawRadian(remote_yaw_angle_);
+                    gimbal_.SetTargetYawRadian(remote_yaw_radian_);
+
+                    reload_.SetTargetReloadTorque(MAX_RELORD_TORQUE);
 
                     break;
                 }
             }
-
-            reload_.SetTargetReloadTorque(0);
         }
         else if(mcu_comm_data_local.switch_r == SWITCH_DOWN)
         {
-            reload_.SetTargetReloadTorque((K * mcu_chassis_data_local.rotation + C) * 10);
+            remote_yaw_radian_ += (M_PI / 180.f * (K * mcu_chassis_data_local.rotation + C)) * REMOTE_YAW_RATIO;
+
+            remote_yaw_radian_ = normalize_pi(remote_yaw_radian_);
+
+            gimbal_.SetTargetYawRadian(remote_yaw_radian_);
         }
 
-        gimbal_.SetImuYawAngle(normalize_angle_pm_pi(mcu_comm_data_local.imu_yaw.f));
+        
+        // MCU掉线检测保护
+        if(mcu_comm_.GetMcuAliveState() == MCU_ALIVE_STATE_ENABLE)
+        {
+            gimbal_.SetImuYawAngle(normalize_angle_pm_pi(mcu_comm_data_local.imu_yaw.f));
+        }
+        else if (mcu_comm_.GetMcuAliveState() == MCU_ALIVE_STATE_DISABLE) 
+        {
+            gimbal_.SetImuYawAngle(gimbal_.GetTargetYawRadian());
+        }
 
 
         /****************************   底盘   ****************************/
 
 
         // 设置当前角度差
-        chassis_.SetNowYawAngleDiff(gimbal_.GetNowYawRadian());
+        chassis_.SetNowYawRadianDiff(gimbal_.GetNowYawRadian());
+
         // 设置目标映射速度
         chassis_.SetTargetVxInGimbal((K * mcu_chassis_data_local.chassis_speed_x + C) * MAX_OMEGA_SPEED);
         chassis_.SetTargetVyInGimbal((K * mcu_chassis_data_local.chassis_speed_y + C) * MAX_OMEGA_SPEED);
@@ -189,25 +208,23 @@ void Robot::Task()
         {
             case SWITCH_UP:
             {
-                chassis_.SetTargetVelocityRotation(MAX_GYROSCOPE_SPEED);
+                chassis_.SetChassisOperationMode(CHASSIS_OPERATION_MODE_SPIN);
 
                 break;
             }
             case SWITCH_MID:
             {
-                chassis_.SetTargetVelocityRotation(0);
+                chassis_.SetChassisOperationMode(CHASSIS_OPERATION_MODE_NORMAL);
+
+                reload_.SetTargetReloadTorque(0);
 
                 break;
             }
             case SWITCH_DOWN:
             {
-                chassis_angle_diff = CalcYawError(remote_yaw_angle_ ,imu_.GetYawRadian());
+                chassis_.SetChassisOperationMode(CHASSIS_OPERATION_MODE_FOLLOW);
 
-                chassis_.chassis_follow_pid_.SetTarget(0);
-                chassis_.chassis_follow_pid_.SetNow(chassis_angle_diff);
-                chassis_.chassis_follow_pid_.CalculatePeriodElapsedCallback();
-
-                chassis_.SetTargetVelocityRotation(chassis_.chassis_follow_pid_.GetOut());
+                // reload_.SetTargetReloadTorque(MAX_RELORD_TORQUE);
 
                 break;
             }

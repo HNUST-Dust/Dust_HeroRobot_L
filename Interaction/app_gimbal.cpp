@@ -78,19 +78,6 @@ void Gimbal::Init()
     motor_yaw_.CanSendEnter();
     osDelay(pdMS_TO_TICKS(1000));
 
-    // // 小Kp粗调
-    // motor_yaw_.SetKp(0.8);    // MIT模式kp
-    // motor_yaw_.SetKd(0.3);    // MIT模式kd
-    // motor_yaw_.SetControlAngle(0);
-    // motor_yaw_.Output();
-    // osDelay(pdMS_TO_TICKS(1300));S
-    // // 大Kp细调
-    // motor_yaw_.SetKp(10.0);    // MIT模式kp
-    // motor_yaw_.SetKd(1.0);    // MIT模式kd
-    // motor_yaw_.SetControlAngle(0);
-    // motor_yaw_.Output();
-    // osDelay(pdMS_TO_TICKS(500));
-
     // 力矩控制
     motor_yaw_.SetKp(0);  // MIT模式kp
     motor_yaw_.SetKd(0);  // MIT模式kd
@@ -124,9 +111,6 @@ void Gimbal::TaskEntry(void *argument)
  */
 void Gimbal::SelfResolution()
 {
-    static float total_theta = 0.0f;
-    static float final_radian = 0.0f;
-
     // 获取当前数据
     now_yaw_omega_ = motor_yaw_.GetNowOmega();
     now_yaw_angle_ = motor_yaw_.GetNowAngle() / PI * 180.f;

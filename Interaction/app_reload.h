@@ -16,14 +16,32 @@
 #include "dvc_motor_dm.h"
 #include "FreeRTOS.h"
 #include "cmsis_os2.h"
+#include "stdio.h"
 
 /* Exported macros -----------------------------------------------------------*/
 
+#define MAX_RELORD_TORQUE       4.5f
+
 /* Exported types ------------------------------------------------------------*/
 
+/**
+ * @brief Reload开火状态
+ * 
+ */
+enum ReloadFireState
+{
+    RELOAD_FIRE_STATE_IDIE = 0,
+    RELOAD_FIRE_STATE_FIRE,
+};
+
+/**
+ * @brief Reload类
+ * 
+ */
 class Reload
 {
 public:
+
     // 拨弹盘1个2006，控制进退弹
     MotorDmNormal motor_reload_;
 
@@ -31,11 +49,14 @@ public:
 
     void Task();
 
+    void MisFireProcess();
+
     inline void SetTargetReloadOmega(float target_reload_rotation);
 
     inline void SetTargetReloadTorque(float target_yaw_torque);
 
 protected:
+
     // Reload当前角度
     float now_reload_angle_ = 0.0f;
 
@@ -48,7 +69,6 @@ protected:
     // Reload当前弧度
     float now_reload_radian_ = 0.0f;
 
-    
     // Reload目标角度
     float target_reload_angle_ = 0.0f;
 
@@ -63,6 +83,18 @@ protected:
 
     // Reload目标角速度
     float target_reload_rotation_ = 0.0f;
+
+    // Reload角度差
+    float reload_angle_diff = 0.0f;
+
+    // Reload上一刻开火状态
+    ReloadFireState pre_reload_fire_state_ = RELOAD_FIRE_STATE_IDIE;
+
+    // Reload当前开火状态
+    ReloadFireState now_reload_fire_state_ = RELOAD_FIRE_STATE_IDIE;
+
+    // Reload卡弹计数
+    uint16_t misfire_count_ = 0;
 
     void SelfResolution();
 
