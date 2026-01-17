@@ -72,10 +72,11 @@ void McuComm::ClearData()
      recv_chassis_data_.chassis_speed_x = 1024;
      recv_chassis_data_.chassis_speed_y = 1024;
      recv_chassis_data_.rotation = 1024;
+     recv_chassis_data_.keyboard_l.all = 0;
 
-     recv_comm_data_.switch_r = SWITCH_MID;
-     recv_comm_data_.switch_l = SWITCH_MID;
-     recv_comm_data_.supercap = 0;
+     recv_comm_data_.switch_lr.all = 15;
+     recv_comm_data_.mouse_lr.all = 0;
+     recv_comm_data_.keyboard_h.all = 0;
 }
 
 /**
@@ -142,60 +143,17 @@ void McuComm::DataProcess(uint8_t* rx_data)
                recv_chassis_data_.chassis_speed_x      = rx_data[1] << 8 | rx_data[2];
                recv_chassis_data_.chassis_speed_y      = rx_data[3] << 8 | rx_data[4];
                recv_chassis_data_.rotation             = rx_data[5] << 8 | rx_data[6];
+               recv_chassis_data_.keyboard_l.all       = rx_data[7];
 
                break;
           }
           case (0xAB): // 拨弹盘，yaw角包
           {
-               switch(rx_data[1])
-               {
-                    case (SWITCH_UP):
-                    {
-                         recv_comm_data_.switch_l = SWITCH_UP;
-                         break;
-                    }
-                    case (SWITCH_MID):
-                    {
-                         recv_comm_data_.switch_l = SWITCH_MID;
-                         break;
-                    }
-                    case (SWITCH_DOWN):
-                    {
-                         recv_comm_data_.switch_l = SWITCH_DOWN;
-                         break;
-                    }
-                    default:
-                    {
-                         recv_comm_data_.switch_l = SWITCH_MID;
-                         break;
-                    }
-               }
+               recv_comm_data_.switch_lr.all = rx_data[1];
 
-               switch(rx_data[2])
-               {
-                    case (SWITCH_UP):
-                    {
-                         recv_comm_data_.switch_r = SWITCH_UP;
-                         break;
-                    }
-                    case (SWITCH_MID):
-                    {
-                         recv_comm_data_.switch_r = SWITCH_MID;
-                         break;
-                    }
-                    case (SWITCH_DOWN):
-                    {
-                         recv_comm_data_.switch_r = SWITCH_DOWN;
-                         break;
-                    }
-                    default:
-                    {
-                         recv_comm_data_.switch_r = SWITCH_MID;
-                         break;
-                    }
-               }
+               recv_comm_data_.mouse_lr.all = rx_data[2];
 
-               recv_comm_data_.supercap = rx_data[3];
+               recv_comm_data_.keyboard_h.all = rx_data[3];
 
                memcpy(&recv_comm_data_.imu_yaw.b, &rx_data[4], 4);
 

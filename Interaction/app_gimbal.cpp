@@ -31,7 +31,7 @@ void Gimbal::Init()
         17.2f,
         0.8f,
         2.65f,
-        1.0f,
+        1.1f,
         0.f,
         30.0f,
         0.001f,
@@ -46,7 +46,7 @@ void Gimbal::Init()
     yaw_omega_pid_.Init(
         0.65f,
         0.08f,
-        0.00305f,
+        0.0031f,
         0.2f,
         0.0f,
         9.9f,
@@ -61,6 +61,7 @@ void Gimbal::Init()
     // yaw轴速度环滤波器
     yaw_omega_filter_.Init(15.0f, 0.001f);
 
+    // yaw轴自瞄滤波器
     yaw_autoaim_filter_.Init(20.f, 0.001f);
 
     // 4310电机初始化
@@ -131,7 +132,7 @@ void Gimbal::SelfResolution()
     yaw_omega_pid_.CalculatePeriodElapsedCallback();
 
     // 设定目标力矩
-    SetTargetYawTorque(yaw_omega_pid_.GetOut());
+    // SetTargetYawTorque(yaw_omega_pid_.GetOut());
 }
 
 /**

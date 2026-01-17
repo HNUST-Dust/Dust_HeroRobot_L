@@ -21,6 +21,8 @@
 // dvc
 #include "dvc_MCU_comm.h"
 #include "dvc_PC_comm.h"
+#include "dvc_remote_dr16.h"
+#include "dvc_remote_vt02.h"
 #include "imu.hpp"
 // app
 #include "app_reload.h"
