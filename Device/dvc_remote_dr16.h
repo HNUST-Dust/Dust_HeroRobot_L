@@ -8,8 +8,8 @@
  * @copyright Copyright (c) 2025
  * 
  */
-#ifndef __DVC_REMOTE_DJI_H__
-#define __DVC_REMOTE_DJI_H__
+#ifndef __DVC_REMOTE_DJI_DR16_H__
+#define __DVC_REMOTE_DJI_DR16_H__
 
 /* Includes ------------------------------------------------------------------*/
 
@@ -21,17 +21,21 @@
 
 /* Exported types ------------------------------------------------------------*/
 
-enum RemoteDjiAliveStatus
+/**
+ * @brief 
+ * 
+ */
+enum RemoteDR16AliveStatus
 {
-    REMOTE_DJI_STATUS_DISABLE = 0,
-    REMOTE_DJI_STATUS_ENABLE  = 1,
+    REMOTE_DR16_ALIVE_STATUS_DISABLE = 0,
+    REMOTE_DR16_ALIVE_STATUS_ENABLE  = 1,
 };
 
 /**
- * @brief DjiDR16按键状态
+ * @brief 遥控按键状态
  * 
  */
-enum RemoteDjiSwitchStatus
+enum RemoteDR16SwitchStatus
 {
     SWITCH_UP    = (uint8_t)1,
     SWITCH_MID   = (uint8_t)3,
@@ -42,7 +46,7 @@ enum RemoteDjiSwitchStatus
  * @brief DjiDR16原始数据
  * 
  */
-struct RemoteDjiData
+struct RemoteDR16Data
 {
     struct 
     {
@@ -66,7 +70,7 @@ struct RemoteDjiData
  * @brief DjiDR16输出
  * 
  */
-struct RemoteDjiOutput
+struct RemoteDR16Output
 {
     struct 
     {
@@ -98,7 +102,6 @@ struct RemoteDjiOutput
             uint16_t reserved : 8;
         } key;
     } keyboard;
-    
 };
 
 /**
@@ -109,14 +112,26 @@ class RemoteDjiDR16
 {
 public:
     // 遥控器输出数据
-    RemoteDjiOutput output_;
+    RemoteDR16Output output_;
 
     // 遥控器状态
-    RemoteDjiAliveStatus remote_dji_alive_status = REMOTE_DJI_STATUS_DISABLE;
+    RemoteDR16AliveStatus remote_dr16_alive_status = REMOTE_DR16_ALIVE_STATUS_DISABLE;
 
     void Init(UART_HandleTypeDef *huart, Uart_Callback callback_function, uint16_t rx_buffer_length);
 
     void Task();
+
+    inline float GetLeftX();
+
+    inline float GetLeftY();
+
+    inline float GetRightX();
+
+    inline float GetRightY();
+
+    inline uint8_t GetSwitchL();
+
+    inline uint8_t GetSwitchR();
 
     void AlivePeriodElapsedCallback();
 
@@ -124,12 +139,12 @@ public:
 
     static void TaskEntry(void *param);  // FreeRTOS 入口，静态函数
 
-protected:
+private:
     // uart管理模块
     UartManageObject* uart_manage_object_;
 
     // 原始数据
-    RemoteDjiData raw_data_;
+    RemoteDR16Data raw_data_;
 
     // 当前时刻flag
     uint32_t flag_ = 0;
@@ -143,11 +158,11 @@ protected:
 
     float c_nor = -256.0f / 165.0f;
 
-    // pitch线性转换参数（-0.35rad为摇杆最低，0.65rad为摇杆最高）
+    // pitch线性转换参数（-24为摇杆最低，24为摇杆最高）
 
-    float k_pitch = 1.f / 1320.f;
+    float k_pitch = 1.f / 30.f;
 
-    float c_pitch = -413.f / 660.f;
+    float c_pitch = -512.f / 15.f;
 
     // 掉线清理数据函数
 
@@ -155,11 +170,12 @@ protected:
 
     // 内部数据处理函数
 
-    void DataProcess(uint8_t* buffer);
+    void DataProcess(uint8_t* rx_data);
 };
 
 /* Exported variables --------------------------------------------------------*/
 
 /* Exported function declarations --------------------------------------------*/
+
 
 #endif

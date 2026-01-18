@@ -132,7 +132,7 @@ void Gimbal::SelfResolution()
     yaw_omega_pid_.CalculatePeriodElapsedCallback();
 
     // 设定目标力矩
-    // SetTargetYawTorque(yaw_omega_pid_.GetOut());
+    SetTargetYawTorque(yaw_omega_pid_.GetOut());
 }
 
 /**

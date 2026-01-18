@@ -14,6 +14,8 @@
 
 /* Private macros ------------------------------------------------------------*/
 
+#define CLAMP(x, min, max)  ((x) > (max) ? (max) : ((x) < (min) ? (min) : (x)))
+
 /* Private types -------------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
@@ -56,47 +58,6 @@ void RemoteDjiVT02::TaskEntry(void *argument)
 };
 
 /**
- * @brief VT02数据处理函数
- * 
- */
-void RemoteDjiVT02::DataProcess(uint8_t* buffer)
-{
-    raw_data_.mouse_x = ((int16_t)buffer[6]) | ((int16_t)buffer[7] << 8);
-    raw_data_.mouse_y = ((int16_t)buffer[8]) | ((int16_t)buffer[9] << 8);
-    raw_data_.mouse_z = ((int16_t)buffer[10]) | ((int16_t)buffer[11] << 8);
-
-    raw_data_.mouse_pl = buffer[13];
-    raw_data_.mouse_pr = buffer[14];
-
-    raw_data_.keyboard = ((int16_t)buffer[15]) | ((int16_t)buffer[16] << 8);
-
-    output_.mouse_x = raw_data_.mouse_x;
-    output_.mouse_y = raw_data_.mouse_y;
-    output_.mouse_z = raw_data_.mouse_z;
-
-    output_.mouse_pl = raw_data_.mouse_pl;
-    output_.mouse_pr = raw_data_.mouse_pr;
-
-    output_.keyboard_l.all = raw_data_.keyboard;
-
-    // printf("%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n", buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], buffer[5], buffer[6], buffer[7]
-    //                                                     , buffer[8], buffer[9], buffer[10], buffer[11], buffer[12], buffer[13], buffer[14]);
-}
-
-/**
- * @brief VT02转换函数
- * 
- * @param buffer 传入遥控数据
- */
-void RemoteDjiVT02::UartRxCpltCallback(uint8_t* buffer)
-{
-    // 滑动窗口, 判断是否在线
-    flag_ += 1;
-    // 读取数据值
-    DataProcess(buffer);
-}
-
-/**
  * @brief VT02清理数据函数
  * 
  */
@@ -109,8 +70,7 @@ void RemoteDjiVT02::ClearData()
     output_.mouse_pl = REMOTE_VT02_KEY_STATUS_FREE;
     output_.mouse_pr = REMOTE_VT02_KEY_STATUS_FREE;
 
-    output_.keyboard_l.all = REMOTE_VT02_KEY_STATUS_FREE;
-    output_.keyboard_h.all = REMOTE_VT02_KEY_STATUS_FREE;
+    output_.keyboard.all = REMOTE_VT02_KEY_STATUS_FREE;
 }
 
 /**
@@ -134,6 +94,23 @@ void RemoteDjiVT02::AlivePeriodElapsedCallback()
     pre_flag_ = flag_;
 }
 
+void RemoteDjiVT02::Process_Keyboard_Toggle(Keyboard current_raw)
+{
+    static uint16_t last_raw_all = 0;
+    static Keyboard toggle_output = {0};
+
+    uint16_t trigger = current_raw.all & (~last_raw_all);
+
+    uint16_t toggle_mask = 0xFFC0; 
+
+    toggle_output.all ^= (trigger & toggle_mask);
+    
+    uint16_t normal_mask = ~toggle_mask;
+    output_.keyboard.all = (toggle_output.all & toggle_mask) | (current_raw.all & normal_mask);
+
+    last_raw_all = current_raw.all;
+}
+
 /**
  * @brief VT02任务函数
  * 
@@ -147,3 +124,64 @@ void RemoteDjiVT02::Task()
     }
 }
 
+/**
+ * @brief VT02转换函数
+ * 
+ * @param buffer 传入遥控数据
+ */
+void RemoteDjiVT02::UartRxCpltCallback(uint8_t* buffer)
+{
+    // 滑动窗口, 判断是否在线
+    flag_ += 1;
+    // 读取数据值
+    DataProcess(buffer);
+}
+
+/**
+ * @brief VT02数据处理函数
+ * 
+ */
+void RemoteDjiVT02::DataProcess(uint8_t* buffer)
+{
+    int16_t dx = (int16_t)((uint16_t)buffer[7] | ((uint16_t)buffer[8] << 8));
+    int16_t dy = (int16_t)((uint16_t)buffer[9] | ((uint16_t)buffer[10] << 8));
+    int16_t dz = (int16_t)((uint16_t)buffer[11] | ((uint16_t)buffer[12] << 8));
+
+    raw_data_.mouse_x = CLAMP(dx * 20, -32768, 32767);
+    raw_data_.mouse_y = CLAMP(dy, -32768, 32767);
+    raw_data_.mouse_z = CLAMP(dz, -32768, 32767);
+
+    output_.mouse_x = (int16_t)raw_data_.mouse_x;
+    output_.mouse_y = (float)raw_data_.mouse_y / 32767.0f;
+    output_.mouse_z = (int16_t)raw_data_.mouse_z;
+
+    raw_data_.mouse_pl = buffer[13];
+    raw_data_.mouse_pr = buffer[14];
+    raw_data_.keyboard.all = (uint16_t)buffer[15] | ((uint16_t)buffer[16] << 8);
+    
+    Process_Keyboard_Toggle(raw_data_.keyboard);
+
+    output_.mouse_pl = raw_data_.mouse_pl;
+    output_.mouse_pr = raw_data_.mouse_pr;
+
+    // printf("%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n", 
+    //     output_.keyboard.keycode.w,
+    //     output_.keyboard.keycode.s,
+    //     output_.keyboard.keycode.a,
+    //     output_.keyboard.keycode.d,
+    //     output_.keyboard.keycode.shift,
+    //     output_.keyboard.keycode.ctrl,
+    //     output_.keyboard.keycode.q,
+    //     output_.keyboard.keycode.e,
+    //     output_.keyboard.keycode.r,
+    //     output_.keyboard.keycode.f,
+    //     output_.keyboard.keycode.g,
+    //     output_.keyboard.keycode.z,
+    //     output_.keyboard.keycode.x,
+    //     output_.keyboard.keycode.c,
+    //     output_.keyboard.keycode.v,
+    //     output_.keyboard.keycode.b
+    // );
+
+    // printf("%f,%f,%f\n", output_.mouse_x, output_.mouse_y, output_.mouse_z);
+}

@@ -16,10 +16,47 @@
 #include "bsp_uart.h"
 #include "FreeRTOS.h"
 #include "cmsis_os2.h"
+#include "alg_math.h"
 
 /* Exported macros -----------------------------------------------------------*/
 
 /* Exported types ------------------------------------------------------------*/
+
+union MouseLR
+{
+    uint8_t all;
+    struct 
+    {
+        uint8_t mouse_l : 2;
+        uint8_t mouse_r : 2;
+        uint8_t reserved : 4;
+    } mousecode;
+};
+
+union Keyboard
+{
+    uint16_t all;
+    struct
+    {
+        uint8_t w : 1;
+        uint8_t s : 1;
+        uint8_t a : 1;
+        uint8_t d : 1;
+        uint8_t shift : 1;
+        uint8_t ctrl : 1;
+        uint8_t q : 1;
+        uint8_t e : 1;
+        uint8_t r : 1;
+        uint8_t f : 1;
+        uint8_t g : 1;
+        uint8_t z : 1;
+        uint8_t x : 1;
+        uint8_t c : 1;
+        uint8_t v : 1;
+        uint8_t b : 1;
+    } keycode;
+};
+
 
 
 /**
@@ -45,12 +82,14 @@ enum RemoteVT02AliveStatus
 
 struct RmoteVT02Data
 {
-    int16_t mouse_x;
-    int16_t mouse_y;
-    int16_t mouse_z;
+    int32_t mouse_x;
+    int32_t mouse_y;
+    int32_t mouse_z;
+
     int8_t mouse_pl;
     int8_t mouse_pr;
-    uint16_t keyboard;
+
+    Keyboard keyboard;
 };
 
 
@@ -63,37 +102,7 @@ struct RemoteVT02Output
     int8_t mouse_pl;
     int8_t mouse_pr;
 
-    union
-    {
-        uint8_t all;
-        struct
-        {
-            uint8_t w : 1;
-            uint8_t s : 1;
-            uint8_t a : 1;
-            uint8_t d : 1;
-            uint8_t shift : 1;
-            uint8_t ctrl : 1;
-            uint8_t q : 1;
-            uint8_t e : 1;
-        } keycode;
-    } keyboard_l;
-
-    union
-    {
-        uint8_t all;
-        struct
-        {
-            uint8_t r : 1;
-            uint8_t f : 1;
-            uint8_t g : 1;
-            uint8_t z : 1;
-            uint8_t x : 1;
-            uint8_t c : 1;
-            uint8_t v : 1;
-            uint8_t b : 1;
-        } keycode;
-    } keyboard_h;
+    Keyboard keyboard;
 };
 
 
@@ -120,7 +129,7 @@ private:
     // uart管理模块
     UartManageObject* uart_manage_object_;
 
-    
+    // 遥控原始数据
     RmoteVT02Data raw_data_;
 
     // 当前时刻flag
@@ -128,6 +137,8 @@ private:
 
     // 前一时刻flag
     uint32_t pre_flag_ = 0;
+
+    void Process_Keyboard_Toggle(Keyboard current_raw);
 
     void ClearData();
 

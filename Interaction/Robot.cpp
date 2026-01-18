@@ -11,13 +11,14 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "Robot.h"
+#include "app_chassis.h"
 
 /* Private macros ------------------------------------------------------------*/
 
 #define K_NORM                  1.f / 660.f
 #define C_NORM                  -256.f / 165.f
 #define MAX_OMEGA_SPEED         20.f
-#define REMOTE_YAW_RATIO        0.5f
+#define REMOTE_YAW_RATIO        0.7f
 
 /* Private types -------------------------------------------------------------*/
 
@@ -86,12 +87,11 @@ void Robot::Task()
     mcu_chassis_data_local.chassis_speed_x     = 1024;
     mcu_chassis_data_local.chassis_speed_y     = 1024;
     mcu_chassis_data_local.rotation            = 1024;
-    mcu_chassis_data_local.keyboard_l.all      = 0;
 
     // Mcu命令数据
     McuCommData mcu_comm_data_local;
-    mcu_comm_data_local.switch_lr.all          = 15;
-    mcu_comm_data_local.keyboard_h.all         = 0;
+    mcu_comm_data_local.mouse_lr.all           = 15;
+    mcu_comm_data_local.keyboard.all           = 0;
     mcu_comm_data_local.imu_yaw.f              = 0;
 
     // Mcu自瞄数据
@@ -114,21 +114,21 @@ void Robot::Task()
         /****************************   云台   ****************************/
 
 
-        if(mcu_comm_data_local.switch_lr.switchcode.switch_r == SWITCH_MID || mcu_comm_data_local.mouse_lr.mousecode.mouse_r == REMOTE_VT02_KEY_STATUS_FREE)
+        if(mcu_comm_data_local.mouse_lr.mousecode.mouse_r == REMOTE_VT02_KEY_STATUS_FREE)
         {
-            remote_yaw_radian_ += (M_PI / 180.f * (K_NORM * mcu_chassis_data_local.rotation + C_NORM)) * REMOTE_YAW_RATIO;
+            remote_yaw_radian_ -= (M_PI / 180.f * (K_NORM * mcu_chassis_data_local.rotation + C_NORM)) * REMOTE_YAW_RATIO;
 
             remote_yaw_radian_ = normalize_pi(remote_yaw_radian_);
 
             gimbal_.SetTargetYawRadian(remote_yaw_radian_);
         }
-        else if(mcu_comm_data_local.switch_lr.switchcode.switch_r == SWITCH_UP || mcu_comm_data_local.mouse_lr.mousecode.mouse_r == REMOTE_VT02_KEY_STATUS_PRESS)
+        else if(mcu_comm_data_local.mouse_lr.mousecode.mouse_r == REMOTE_VT02_KEY_STATUS_PRESS)
         {
             switch (mcu_autoaim_data_local.mode) 
             {
                 case(AUTOAIM_MODE_IDIE):
                 {
-                    remote_yaw_radian_ += (M_PI / 180.f * (K_NORM * mcu_chassis_data_local.rotation + C_NORM)) * REMOTE_YAW_RATIO;
+                    remote_yaw_radian_ -= (M_PI / 180.f * (K_NORM * mcu_chassis_data_local.rotation + C_NORM)) * REMOTE_YAW_RATIO;
 
                     remote_yaw_radian_ = normalize_pi(remote_yaw_radian_);
 
@@ -190,22 +190,24 @@ void Robot::Task()
         /****************************   模式   ****************************/
 
         
-        // 左按钮
-        if(mcu_comm_data_local.switch_lr.switchcode.switch_l == SWITCH_MID || mcu_comm_data_local.mouse_lr.mousecode.mouse_l == REMOTE_VT02_KEY_STATUS_FREE) 
+        if(mcu_comm_data_local.mouse_lr.mousecode.mouse_l == REMOTE_VT02_KEY_STATUS_FREE) 
         {
-            chassis_.SetChassisOperationMode(CHASSIS_OPERATION_MODE_NORMAL);
-
             reload_.SetTargetReloadTorque(0);
         }
-        else if(mcu_comm_data_local.switch_lr.switchcode.switch_l == SWITCH_DOWN || mcu_comm_data_local.mouse_lr.mousecode.mouse_l == REMOTE_VT02_KEY_STATUS_PRESS)
-        {
-            chassis_.SetChassisOperationMode(CHASSIS_OPERATION_MODE_NORMAL);
-        }
 
-        if(mcu_comm_data_local.switch_lr.switchcode.switch_l == SWITCH_UP)
+        if(mcu_comm_data_local.keyboard.keycode.q)
         {
             chassis_.SetChassisOperationMode(CHASSIS_OPERATION_MODE_SPIN);
         }
+        else if(mcu_comm_data_local.keyboard.keycode.v)
+        {
+            chassis_.SetChassisOperationMode(CHASSIS_OPERATION_MODE_FOLLOW);
+        }
+        else
+        {
+            chassis_.SetChassisOperationMode(CHASSIS_OPERATION_MODE_NORMAL);
+        }
+
 
         osDelay(pdMS_TO_TICKS(1));
     }
