@@ -22,7 +22,7 @@
 /* Exported types ------------------------------------------------------------*/
 
 /**
- * @brief 
+ * @brief DR16在线状态枚举
  * 
  */
 enum RemoteDR16AliveStatus
@@ -32,7 +32,7 @@ enum RemoteDR16AliveStatus
 };
 
 /**
- * @brief 遥控按键状态
+ * @brief DR16拨杆状态枚举
  * 
  */
 enum RemoteDR16SwitchStatus
@@ -43,10 +43,10 @@ enum RemoteDR16SwitchStatus
 };
 
 /**
- * @brief DjiDR16原始数据
+ * @brief DR16原始数据结构体
  * 
  */
-struct RemoteDR16Data
+struct RemoteDR16RawData
 {
     struct 
     {
@@ -62,15 +62,15 @@ struct RemoteDR16Data
 
     struct 
     {
-        uint16_t key;
+        uint16_t all;
     } keyboard;
 };
 
 /**
- * @brief DjiDR16输出
+ * @brief DR16输出数据结构体
  * 
  */
-struct RemoteDR16Output
+struct RemoteDR16OutputData
 {
     struct 
     {
@@ -100,19 +100,19 @@ struct RemoteDR16Output
             uint16_t shift : 1, 
                      ctrl : 1;
             uint16_t reserved : 8;
-        } key;
+        } keycode;
     } keyboard;
 };
 
 /**
- * @brief DjiDR16遥控器
+ * @brief DR16遥控器
  * 
  */
 class RemoteDjiDR16
 {
 public:
     // 遥控器输出数据
-    RemoteDR16Output output_;
+    RemoteDR16OutputData output_;
 
     // 遥控器状态
     RemoteDR16AliveStatus remote_dr16_alive_status = REMOTE_DR16_ALIVE_STATUS_DISABLE;
@@ -144,25 +144,13 @@ private:
     UartManageObject* uart_manage_object_;
 
     // 原始数据
-    RemoteDR16Data raw_data_;
+    RemoteDR16RawData raw_data_;
 
     // 当前时刻flag
     uint32_t flag_ = 0;
 
     // 前一时刻flag
     uint32_t pre_flag_ = 0;
-
-    // 归一化线性转换参数
-
-    float k_nor = 1.0f / 660.0f;
-
-    float c_nor = -256.0f / 165.0f;
-
-    // pitch线性转换参数（-24为摇杆最低，24为摇杆最高）
-
-    float k_pitch = 1.f / 30.f;
-
-    float c_pitch = -512.f / 15.f;
 
     // 掉线清理数据函数
 

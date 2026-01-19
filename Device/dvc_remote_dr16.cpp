@@ -14,6 +14,11 @@
 
 /* Private macros ------------------------------------------------------------*/
 
+#define K_NORM      1.f / 660.f
+#define C_NORM      -256.f / 165.f
+#define K_PITCH     1.f / 30.f
+#define C_PITCH     -512.f / 15.f
+
 /* Private types -------------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
@@ -79,29 +84,24 @@ void RemoteDjiDR16::DataProcess(uint8_t* rx_data)
     raw_data_.mouse.pl = rx_data[12];
     raw_data_.mouse.pr = rx_data[13];
 
-    raw_data_.keyboard.key = (int16_t)rx_data[14];
+    raw_data_.keyboard.all = (int16_t)rx_data[14];
 
 
     /****************************   遥控数据    ****************************/
 
 
-    // 上板数据
-    output_.remote.pitch = k_pitch * raw_data_.rc.ch3 + c_pitch;
+    output_.remote.pitch = K_PITCH * raw_data_.rc.ch3 + C_PITCH;
 
-    // 下板数据
     output_.remote.chassis_x  = raw_data_.rc.ch0;
     output_.remote.chassis_y  = raw_data_.rc.ch1;
     output_.remote.rotation   = raw_data_.rc.ch2;
 
-    // 通用数据
     output_.remote.switch_l = raw_data_.rc.s1;
     output_.remote.switch_r = raw_data_.rc.s2;
 
 
     /****************************   键鼠数据    ****************************/
 
-
-    // 鼠标数据
     output_.mouse.mouse_x = raw_data_.mouse.x;
     output_.mouse.mouse_y = raw_data_.mouse.y;
     output_.mouse.mouse_z = raw_data_.mouse.z;
@@ -109,8 +109,7 @@ void RemoteDjiDR16::DataProcess(uint8_t* rx_data)
     output_.mouse.press_l = raw_data_.mouse.pl;
     output_.mouse.press_r = raw_data_.mouse.pr;
 
-    // 键盘数据
-    output_.keyboard.all = raw_data_.keyboard.key;
+    output_.keyboard.all = raw_data_.keyboard.all;
 }
 
 /**
@@ -132,7 +131,7 @@ void RemoteDjiDR16::UartRxCpltCallback(uint8_t* buffer)
  */
 void RemoteDjiDR16::ClearData()
 {
-    output_.remote.pitch = k_pitch * 1024 + c_pitch;
+    output_.remote.pitch = K_PITCH * 1024 + C_PITCH;
     output_.remote.chassis_x = output_.remote.chassis_y = output_.remote.rotation = 1024;
     output_.remote.switch_l = output_.remote.switch_r = 3;
 }

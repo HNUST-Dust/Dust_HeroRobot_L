@@ -11,14 +11,13 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "Robot.h"
-#include "app_chassis.h"
 
 /* Private macros ------------------------------------------------------------*/
 
 #define K_NORM                  1.f / 660.f
 #define C_NORM                  -256.f / 165.f
-#define MAX_OMEGA_SPEED         20.f
-#define REMOTE_YAW_RATIO        0.7f
+#define REMOTE_YAW_RATIO        1.0f
+#define AUTOAIM_YAW_RATIO       150.f
 
 /* Private types -------------------------------------------------------------*/
 
@@ -90,7 +89,7 @@ void Robot::Task()
 
     // Mcu命令数据
     McuCommData mcu_comm_data_local;
-    mcu_comm_data_local.mouse_lr.all           = 15;
+    mcu_comm_data_local.mouse_lr.all           = 0;
     mcu_comm_data_local.keyboard.all           = 0;
     mcu_comm_data_local.imu_yaw.f              = 0;
 
@@ -142,7 +141,7 @@ void Robot::Task()
                 {
                     float filtered_autoaim = gimbal_.yaw_autoaim_filter_.Update(mcu_autoaim_data_local.autoaim_yaw_ang.f);
 
-                    remote_yaw_radian_ += filtered_autoaim / 150.f;
+                    remote_yaw_radian_ += filtered_autoaim / AUTOAIM_YAW_RATIO;
 
                     gimbal_.SetTargetYawRadian(remote_yaw_radian_);
 
@@ -154,7 +153,7 @@ void Robot::Task()
                 {
                     float filtered_autoaim = gimbal_.yaw_autoaim_filter_.Update(mcu_autoaim_data_local.autoaim_yaw_ang.f);
 
-                    remote_yaw_radian_ += filtered_autoaim / 150.f;
+                    remote_yaw_radian_ += filtered_autoaim / AUTOAIM_YAW_RATIO;
 
                     gimbal_.SetTargetYawRadian(remote_yaw_radian_);
 
@@ -190,12 +189,13 @@ void Robot::Task()
         /****************************   模式   ****************************/
 
         
-        if(mcu_comm_data_local.mouse_lr.mousecode.mouse_l == REMOTE_VT02_KEY_STATUS_FREE) 
+        if(mcu_comm_data_local.mouse_lr.mousecode.mouse_l == REMOTE_VT02_KEY_STATUS_FREE)
         {
             reload_.SetTargetReloadTorque(0);
         }
 
-        if(mcu_comm_data_local.keyboard.keycode.q)
+
+        if(mcu_comm_data_local.keyboard.keycode.shift)
         {
             chassis_.SetChassisOperationMode(CHASSIS_OPERATION_MODE_SPIN);
         }

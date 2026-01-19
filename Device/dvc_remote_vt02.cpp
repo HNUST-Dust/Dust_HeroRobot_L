@@ -43,7 +43,7 @@ void RemoteDjiVT02::Init(UART_HandleTypeDef *huart, Uart_Callback callback_funct
         .stack_size = 256,
         .priority = (osPriority_t) osPriorityNormal
     };
-    osThreadNew(RemoteDjiVT02::TaskEntry, this, &kRemoteVT02TaskAttr);
+    // osThreadNew(RemoteDjiVT02::TaskEntry, this, &kRemoteVT02TaskAttr);
 }
 
 /**
@@ -67,8 +67,8 @@ void RemoteDjiVT02::ClearData()
     output_.mouse_y = 0;
     output_.mouse_z = 0;
 
-    output_.mouse_pl = REMOTE_VT02_KEY_STATUS_FREE;
-    output_.mouse_pr = REMOTE_VT02_KEY_STATUS_FREE;
+    output_.mouse_l = REMOTE_VT02_KEY_STATUS_FREE;
+    output_.mouse_r = REMOTE_VT02_KEY_STATUS_FREE;
 
     output_.keyboard.all = REMOTE_VT02_KEY_STATUS_FREE;
 }
@@ -94,6 +94,11 @@ void RemoteDjiVT02::AlivePeriodElapsedCallback()
     pre_flag_ = flag_;
 }
 
+/**
+ * @brief VT02按键检测函数
+ * 
+ * @param current_raw 
+ */
 void RemoteDjiVT02::Process_Keyboard_Toggle(Keyboard current_raw)
 {
     static uint16_t last_raw_all = 0;
@@ -119,7 +124,7 @@ void RemoteDjiVT02::Task()
 {
     for(;;)
     {
-        AlivePeriodElapsedCallback();
+        // AlivePeriodElapsedCallback();
         osDelay(pdMS_TO_TICKS(50));     // 请勿修改频率
     }
 }
@@ -143,6 +148,9 @@ void RemoteDjiVT02::UartRxCpltCallback(uint8_t* buffer)
  */
 void RemoteDjiVT02::DataProcess(uint8_t* buffer)
 {
+    /****************************   原始数据    ****************************/
+
+
     int16_t dx = (int16_t)((uint16_t)buffer[7] | ((uint16_t)buffer[8] << 8));
     int16_t dy = (int16_t)((uint16_t)buffer[9] | ((uint16_t)buffer[10] << 8));
     int16_t dz = (int16_t)((uint16_t)buffer[11] | ((uint16_t)buffer[12] << 8));
@@ -151,37 +159,20 @@ void RemoteDjiVT02::DataProcess(uint8_t* buffer)
     raw_data_.mouse_y = CLAMP(dy, -32768, 32767);
     raw_data_.mouse_z = CLAMP(dz, -32768, 32767);
 
+    raw_data_.mouse_l = buffer[13];
+    raw_data_.mouse_r = buffer[14];
+    raw_data_.keyboard.all = (uint16_t)buffer[15] | ((uint16_t)buffer[16] << 8);
+
+
+    /****************************   键鼠数据    ****************************/
+
+
     output_.mouse_x = (int16_t)raw_data_.mouse_x;
-    output_.mouse_y = (float)raw_data_.mouse_y / 32767.0f;
+    output_.mouse_y = (float)raw_data_.mouse_y / 32767.f;
     output_.mouse_z = (int16_t)raw_data_.mouse_z;
 
-    raw_data_.mouse_pl = buffer[13];
-    raw_data_.mouse_pr = buffer[14];
-    raw_data_.keyboard.all = (uint16_t)buffer[15] | ((uint16_t)buffer[16] << 8);
-    
+    output_.mouse_l = raw_data_.mouse_l;
+    output_.mouse_r = raw_data_.mouse_r;
+
     Process_Keyboard_Toggle(raw_data_.keyboard);
-
-    output_.mouse_pl = raw_data_.mouse_pl;
-    output_.mouse_pr = raw_data_.mouse_pr;
-
-    // printf("%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n", 
-    //     output_.keyboard.keycode.w,
-    //     output_.keyboard.keycode.s,
-    //     output_.keyboard.keycode.a,
-    //     output_.keyboard.keycode.d,
-    //     output_.keyboard.keycode.shift,
-    //     output_.keyboard.keycode.ctrl,
-    //     output_.keyboard.keycode.q,
-    //     output_.keyboard.keycode.e,
-    //     output_.keyboard.keycode.r,
-    //     output_.keyboard.keycode.f,
-    //     output_.keyboard.keycode.g,
-    //     output_.keyboard.keycode.z,
-    //     output_.keyboard.keycode.x,
-    //     output_.keyboard.keycode.c,
-    //     output_.keyboard.keycode.v,
-    //     output_.keyboard.keycode.b
-    // );
-
-    // printf("%f,%f,%f\n", output_.mouse_x, output_.mouse_y, output_.mouse_z);
 }

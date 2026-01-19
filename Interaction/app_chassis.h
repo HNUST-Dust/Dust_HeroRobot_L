@@ -23,6 +23,8 @@
 
 /* Exported macros -----------------------------------------------------------*/
 
+#define MAX_OMEGA_SPEED         15.f
+
 /* Exported types ------------------------------------------------------------*/
 
 /**
@@ -81,18 +83,14 @@ protected:
     // yaw轴角度差
     float yaw_radian_diff_ = 0.0f;
 
-// 斜坡规划参数
+    // 斜坡规划参数
+    float max_accel_xy_ = 100.f;
+    float max_accel_r_  = 100.f;
 
-    // xyr轴最大加速度
-    float max_accel_xy_ = 180.f;
-    float max_accel_r_  = 180.f;
-
-    // xyr当前加速度
     float now_accel_x_ = 0.0f;
     float now_accel_y_ = 0.0f;
     float now_accel_r_ = 0.0f;
 
-    // xyr上一次目标速度
     float last_target_vx_ = 0.0f;
     float last_target_vy_ = 0.0f;
     float last_target_rotation_ = 0.0f;

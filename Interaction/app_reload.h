@@ -51,7 +51,7 @@ public:
 
     void MisFireProcess();
 
-    inline void SetTargetReloadOmega(float target_reload_rotation);
+    inline void SetTargetReloadOmega(float target_reload_omega);
 
     inline void SetTargetReloadTorque(float target_yaw_torque);
 
@@ -59,30 +59,15 @@ protected:
 
     // Reload当前角度
     float now_reload_angle_ = 0.0f;
-
-    // Reload当前角速度
     float now_reload_omega_ = 0.0f;
-
-    // Reload当前力矩
     float now_reload_torque_ = 0.0f;
-
-    // Reload当前弧度
     float now_reload_radian_ = 0.0f;
 
     // Reload目标角度
     float target_reload_angle_ = 0.0f;
-
-    // Reload目标角速度
     float target_reload_omega_ = 0.0f;
-
-    // Reload目标力矩
     float target_reload_torque_ = 0.0f;
-
-    // Reload目标弧度
     float target_reload_radian_ = 0.0f;
-
-    // Reload目标角速度
-    float target_reload_rotation_ = 0.0f;
 
     // Reload角度差
     float reload_angle_diff = 0.0f;
@@ -112,9 +97,9 @@ protected:
  * 
  * @param target_reload_rotation 
  */
-inline void Reload::SetTargetReloadOmega(float target_reload_rotation)
+inline void Reload::SetTargetReloadOmega(float target_reload_omega)
 {
-    target_reload_rotation_ = target_reload_rotation;
+    target_reload_omega_ = target_reload_omega;
 }
 
 /**
