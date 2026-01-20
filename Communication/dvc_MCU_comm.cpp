@@ -141,6 +141,7 @@ void McuComm::DataProcess(uint8_t* rx_data)
                recv_chassis_data_.chassis_speed_x      = rx_data[1] << 8 | rx_data[2];
                recv_chassis_data_.chassis_speed_y      = rx_data[3] << 8 | rx_data[4];
                recv_chassis_data_.rotation             = rx_data[5] << 8 | rx_data[6];
+               recv_chassis_data_.switch_lr.all        = rx_data[7];
 
                break;
           }

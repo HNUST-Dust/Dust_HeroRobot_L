@@ -86,6 +86,7 @@ void Robot::Task()
     mcu_chassis_data_local.chassis_speed_x     = 1024;
     mcu_chassis_data_local.chassis_speed_y     = 1024;
     mcu_chassis_data_local.rotation            = 1024;
+    mcu_chassis_data_local.switch_lr.all       = 15;
 
     // Mcu命令数据
     McuCommData mcu_comm_data_local;
@@ -113,6 +114,7 @@ void Robot::Task()
         /****************************   云台   ****************************/
 
 
+        // 自瞄开启
         if(mcu_comm_data_local.mouse_lr.mousecode.mouse_r == REMOTE_VT02_KEY_STATUS_FREE)
         {
             remote_yaw_radian_ -= (M_PI / 180.f * (K_NORM * mcu_chassis_data_local.rotation + C_NORM)) * REMOTE_YAW_RATIO;
@@ -123,45 +125,20 @@ void Robot::Task()
         }
         else if(mcu_comm_data_local.mouse_lr.mousecode.mouse_r == REMOTE_VT02_KEY_STATUS_PRESS)
         {
-            switch (mcu_autoaim_data_local.mode) 
+            if(mcu_autoaim_data_local.mode == PC_AUTOAIM_MODE_IDIE)
             {
-                case(AUTOAIM_MODE_IDIE):
-                {
-                    remote_yaw_radian_ -= (M_PI / 180.f * (K_NORM * mcu_chassis_data_local.rotation + C_NORM)) * REMOTE_YAW_RATIO;
-
-                    remote_yaw_radian_ = normalize_pi(remote_yaw_radian_);
-
-                    gimbal_.SetTargetYawRadian(remote_yaw_radian_);
-
-                    reload_.SetTargetReloadTorque(0);
-
-                    break;
-                }
-                case(AUTOAIM_MODE_FOLLOW):
-                {
-                    float filtered_autoaim = gimbal_.yaw_autoaim_filter_.Update(mcu_autoaim_data_local.autoaim_yaw_ang.f);
-
-                    remote_yaw_radian_ += filtered_autoaim / AUTOAIM_YAW_RATIO;
-
-                    gimbal_.SetTargetYawRadian(remote_yaw_radian_);
-
-                    reload_.SetTargetReloadTorque(0);
-
-                    break;
-                }
-                case(AUTOAIM_MODE_FIRE):
-                {
-                    float filtered_autoaim = gimbal_.yaw_autoaim_filter_.Update(mcu_autoaim_data_local.autoaim_yaw_ang.f);
-
-                    remote_yaw_radian_ += filtered_autoaim / AUTOAIM_YAW_RATIO;
-
-                    gimbal_.SetTargetYawRadian(remote_yaw_radian_);
-
-                    reload_.SetTargetReloadTorque(MAX_RELORD_TORQUE);
-
-                    break;
-                }
+                remote_yaw_radian_ -= (M_PI / 180.f * (K_NORM * mcu_chassis_data_local.rotation + C_NORM)) * REMOTE_YAW_RATIO;
             }
+            else
+            {
+                float filtered_autoaim = gimbal_.yaw_autoaim_filter_.Update(mcu_autoaim_data_local.autoaim_yaw_ang.f);
+
+                remote_yaw_radian_ += filtered_autoaim / AUTOAIM_YAW_RATIO;
+            }
+
+            remote_yaw_radian_ = normalize_pi(remote_yaw_radian_);
+
+            gimbal_.SetTargetYawRadian(remote_yaw_radian_);
         }
         
         // MCU掉线检测保护
@@ -188,13 +165,23 @@ void Robot::Task()
         
         /****************************   模式   ****************************/
 
-        
+
         if(mcu_comm_data_local.mouse_lr.mousecode.mouse_l == REMOTE_VT02_KEY_STATUS_FREE)
         {
             reload_.SetTargetReloadTorque(0);
         }
+        else if(mcu_comm_data_local.mouse_lr.mousecode.mouse_l && mcu_comm_data_local.mouse_lr.mousecode.mouse_r  && mcu_autoaim_data_local.mode == PC_AUTOAIM_MODE_FIRE)
+        {
+            // 自瞄时，达到开火阈值才允许拨弹
+            reload_.SetTargetReloadTorque(MAX_RELORD_TORQUE);
+        }
+        else if(mcu_comm_data_local.mouse_lr.mousecode.mouse_l && mcu_comm_data_local.keyboard.keycode.f)
+        {
+            // 未开启自喵时，开启摩擦轮才允许拨弹
+            reload_.SetTargetReloadTorque(MAX_RELORD_TORQUE);
+        }
 
-
+        // 小陀螺 > 底盘跟随 > 云台独立
         if(mcu_comm_data_local.keyboard.keycode.shift)
         {
             chassis_.SetChassisOperationMode(CHASSIS_OPERATION_MODE_SPIN);
@@ -206,6 +193,12 @@ void Robot::Task()
         else
         {
             chassis_.SetChassisOperationMode(CHASSIS_OPERATION_MODE_NORMAL);
+        }
+
+
+        if(mcu_comm_data_local.keyboard.keycode.ctrl)
+        {
+            gimbal_.motor_yaw_.CanSendSaveZero();
         }
 
 

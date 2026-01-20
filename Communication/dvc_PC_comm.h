@@ -40,9 +40,9 @@ union PcConv
  */
 enum PcAutoAimMode
 {
-    AUTOAIM_MODE_IDIE = 0,
-    AUTOAIM_MODE_FOLLOW,
-    AUTOAIM_MODE_FIRE,
+    PC_AUTOAIM_MODE_IDIE = 0,
+    PC_AUTOAIM_MODE_FOLLOW,
+    PC_AUTOAIM_MODE_FIRE,
 };
 
 /**

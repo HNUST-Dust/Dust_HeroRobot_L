@@ -90,50 +90,31 @@ public:
 
     inline void SetImuYawAngle(float imu_yaw_angle);
 
-    float yaw_angle_diff_ = 0.0f;
-
-    float imu_yaw_angle_ = 0.0f;
-
+    inline void SetNowYawZeroPoint(float yaw_zero_point);
 
 protected:
-    // 内部变量
-
-    // 读变量
-
     // yaw轴当前角度
     float now_yaw_angle_ = 0.0f;
-
-    // yaw轴当前角速度
     float now_yaw_omega_ = 0.0f;
-
-    // yaw轴当前力矩
     float now_yaw_torque_ = 0.0f;
-
-    // yaw轴当前弧度
     float now_yaw_radian_ = 0.0f;
-
-    // 陀螺仪yaw轴角度
-    
-    // yaw角角度差，用于角度环
-    
-
-    // 写变量
-
-    // 云台状态
-    GimbalControlType gimbal_control_type_ = GIMBAL_CONTROL_TYPE_MANUAL;
-    // 读写变量
 
     // yaw轴目标角度
     float target_yaw_angle_ = 0.0f;
-
-    // yaw轴目标角速度
     float target_yaw_omega_ = 0.0f;
-
-    // yaw轴目标力矩
     float target_yaw_torque_ = 0.0f;
-
-    // yaw轴目标弧度
     float target_yaw_radian_ = 0.0f;
+
+    float yaw_zero_point_ = 0.0f;
+
+    // 陀螺仪yaw轴角度]
+    float imu_yaw_angle_ = 0.0f;
+    
+    // yaw角角度差，用于角度环
+    float yaw_angle_diff_ = 0.0f;
+
+    // 云台状态
+    GimbalControlType gimbal_control_type_ = GIMBAL_CONTROL_TYPE_MANUAL;
 
     void SelfResolution();
     
@@ -276,6 +257,16 @@ inline void Gimbal::SetTargetYawRadian(float target_yaw_radian)
 inline void Gimbal::SetImuYawAngle(float imu_yaw_angle)
 {
     imu_yaw_angle_ = imu_yaw_angle;
+}
+
+/**
+ * @brief 设定当前yaw轴零点
+ * 
+ * @param yaw_zero_point 
+ */
+inline void Gimbal::SetNowYawZeroPoint(float yaw_zero_point)
+{
+    yaw_zero_point_ = yaw_zero_point;
 }
 
 #endif

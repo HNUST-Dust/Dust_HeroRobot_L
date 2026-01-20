@@ -12,6 +12,9 @@
 
 #include "app_reload.h"
 #include "alg_math.h"
+#include "cmsis_os2.h"
+#include "dvc_motor_dm.h"
+#include "projdefs.h"
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -74,6 +77,9 @@ void Reload::SelfResolution()
     now_reload_omega_ = motor_reload_.GetNowOmega();
     now_reload_angle_ = normalize_angle(motor_reload_.GetNowAngle() / PI * 180.f);
     now_reload_torque_ = motor_reload_.GetNowTorque();
+
+    motor_reload_.AlivePeriodElapsedCallback();
+    now_reload_status_ = motor_reload_.GetStatus();
 }
 
 /**
@@ -87,29 +93,6 @@ void Reload::Output()
 }
 
 /**
- * @brief Reload卡弹处理函数
- * 
- */
-void Reload::MisFireProcess()
-{
-    static uint8_t entry_flag = 0;
-
-    // 当稳定为开火模式时才允许进入卡弹处理
-    if(pre_reload_fire_state_ == RELOAD_FIRE_STATE_FIRE && now_reload_fire_state_ == RELOAD_FIRE_STATE_FIRE)
-    {
-        entry_flag = 1;
-    }
-
-    if(entry_flag)
-    {
-        target_reload_torque_ = 0;
-        entry_flag = 0;
-    }
-
-    misfire_count_ = 0;
-}
-
-/**
  * @brief Reload任务函数
  * 
  */
@@ -117,15 +100,18 @@ void Reload::Task()
 {
     for(;;)
     {
-        // 拨弹盘电机掉线处理
-        motor_reload_.AlivePeriodElapsedCallback();
         // 自身姿态解算
         SelfResolution();
-        // 拨弹盘卡弹处理
-        // MisFireProcess();
-        // 输出
-        Output();
-        
+        // 拨弹盘电机掉线处理
+        if(now_reload_status_ == MOTOR_DM_STATUS_ENABLE)
+        {
+            Output();
+        }
+        else
+        {
+            motor_reload_.CanSendEnter();
+            osDelay(pdMS_TO_TICKS(1000));
+        }
         osDelay(pdMS_TO_TICKS(1));
     }
 }

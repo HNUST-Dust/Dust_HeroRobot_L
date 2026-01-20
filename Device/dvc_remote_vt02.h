@@ -31,9 +31,9 @@ union MouseLR
     uint8_t all;
     struct 
     {
-        uint8_t mouse_l : 2;
-        uint8_t mouse_r : 2;
-        uint8_t reserved : 4;
+        uint8_t mouse_l : 1;
+        uint8_t mouse_r : 1;
+        uint8_t reserved : 6;
     } mousecode;
 };
 

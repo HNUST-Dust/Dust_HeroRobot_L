@@ -25,16 +25,6 @@
 /* Exported types ------------------------------------------------------------*/
 
 /**
- * @brief Reload开火状态
- * 
- */
-enum ReloadFireState
-{
-    RELOAD_FIRE_STATE_IDIE = 0,
-    RELOAD_FIRE_STATE_FIRE,
-};
-
-/**
  * @brief Reload类
  * 
  */
@@ -49,19 +39,23 @@ public:
 
     void Task();
 
-    void MisFireProcess();
-
     inline void SetTargetReloadOmega(float target_reload_omega);
 
     inline void SetTargetReloadTorque(float target_yaw_torque);
 
+    inline float GetTargetReloadOmega();
+
+    inline float GetTargetReloadTorque();
+
 protected:
 
-    // Reload当前角度
+    // Reload当前值
     float now_reload_angle_ = 0.0f;
     float now_reload_omega_ = 0.0f;
     float now_reload_torque_ = 0.0f;
     float now_reload_radian_ = 0.0f;
+
+    MotorDmStatus now_reload_status_ = MOTOR_DM_STATUS_ENABLE;
 
     // Reload目标角度
     float target_reload_angle_ = 0.0f;
@@ -71,15 +65,6 @@ protected:
 
     // Reload角度差
     float reload_angle_diff = 0.0f;
-
-    // Reload上一刻开火状态
-    ReloadFireState pre_reload_fire_state_ = RELOAD_FIRE_STATE_IDIE;
-
-    // Reload当前开火状态
-    ReloadFireState now_reload_fire_state_ = RELOAD_FIRE_STATE_IDIE;
-
-    // Reload卡弹计数
-    uint16_t misfire_count_ = 0;
 
     void SelfResolution();
 
@@ -110,6 +95,26 @@ inline void Reload::SetTargetReloadOmega(float target_reload_omega)
 inline void Reload::SetTargetReloadTorque(float target_yaw_torque)
 {
     target_reload_torque_ = target_yaw_torque;
+}
+
+/**
+ * @brief 
+ * 
+ * @return float 
+ */
+inline float Reload::GetTargetReloadOmega()
+{
+    return (target_reload_omega_);
+}
+
+/**
+ * @brief 
+ * 
+ * @return float 
+ */
+inline float Reload::GetTargetReloadTorque()
+{
+    return (target_reload_torque_);
 }
 
 

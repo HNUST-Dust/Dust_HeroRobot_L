@@ -54,6 +54,16 @@ struct McuChassisData
     uint16_t         chassis_speed_x;           // 平移方向：左、右
     uint16_t         chassis_speed_y;           // 平移方向：前、后
     uint16_t         rotation;                  // 旋转方向：不转、顺时针转、逆时针转
+    union
+    {
+        uint8_t all;
+        struct
+        {
+            uint8_t switch_l : 2;
+            uint8_t switch_r : 2;
+            uint8_t reserved : 4;
+        } switchcode;
+    } switch_lr;
 };
 
 /**
