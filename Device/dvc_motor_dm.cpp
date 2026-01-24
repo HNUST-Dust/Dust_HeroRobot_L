@@ -299,7 +299,7 @@ void MotorDmNormal::CanSendSaveZero()
  */
 void MotorDmNormal::AlivePeriodElapsedCallback()
 {
-    if(++alive_heart_ >= 10)
+    if(++alive_heart_ >= 100)
     {
         // 判断该时间段内是否接收过电机数据
         if (flag_ == pre_flag_)

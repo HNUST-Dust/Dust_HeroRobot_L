@@ -74,12 +74,12 @@ void Reload::TaskEntry(void *argument)
  */
 void Reload::SelfResolution()
 {
+    motor_reload_.AlivePeriodElapsedCallback();
+
+    now_reload_status_ = motor_reload_.GetStatus();
     now_reload_omega_ = motor_reload_.GetNowOmega();
     now_reload_angle_ = normalize_angle(motor_reload_.GetNowAngle() / PI * 180.f);
     now_reload_torque_ = motor_reload_.GetNowTorque();
-
-    motor_reload_.AlivePeriodElapsedCallback();
-    now_reload_status_ = motor_reload_.GetStatus();
 }
 
 /**
@@ -110,7 +110,6 @@ void Reload::Task()
         else
         {
             motor_reload_.CanSendEnter();
-            osDelay(pdMS_TO_TICKS(1000));
         }
         osDelay(pdMS_TO_TICKS(1));
     }

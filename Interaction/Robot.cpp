@@ -11,12 +11,15 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "Robot.h"
+#include "app_reload.h"
+#include "dvc_PC_comm.h"
+#include "dvc_remote_dr16.h"
 
 /* Private macros ------------------------------------------------------------*/
 
 #define K_NORM                  1.f / 660.f
 #define C_NORM                  -256.f / 165.f
-#define REMOTE_YAW_RATIO        1.0f
+#define REMOTE_YAW_RATIO        0.7f
 #define AUTOAIM_YAW_RATIO       150.f
 
 /* Private types -------------------------------------------------------------*/
@@ -38,12 +41,6 @@ void Robot::Init()
 
     // 云台初始化
     gimbal_.Init();
-
-    // 底盘陀螺仪初始化
-    imu_.Init();
-
-    // 10s时间等待陀螺仪收敛
-    osDelay(pdMS_TO_TICKS(1 * 1000));
 
     // 拨弹盘初始化
     reload_.Init();
@@ -115,19 +112,12 @@ void Robot::Task()
 
 
         // 自瞄开启
-        if(mcu_comm_data_local.mouse_lr.mousecode.mouse_r == REMOTE_VT02_KEY_STATUS_FREE)
-        {
-            remote_yaw_radian_ -= (M_PI / 180.f * (K_NORM * mcu_chassis_data_local.rotation + C_NORM)) * REMOTE_YAW_RATIO;
-
-            remote_yaw_radian_ = normalize_pi(remote_yaw_radian_);
-
-            gimbal_.SetTargetYawRadian(remote_yaw_radian_);
-        }
-        else if(mcu_comm_data_local.mouse_lr.mousecode.mouse_r == REMOTE_VT02_KEY_STATUS_PRESS)
+        
+        if(mcu_chassis_data_local.switch_lr.switchcode.switch_r == SWITCH_UP || mcu_comm_data_local.mouse_lr.mousecode.mouse_r == REMOTE_VT02_KEY_STATUS_PRESS)
         {
             if(mcu_autoaim_data_local.mode == PC_AUTOAIM_MODE_IDIE)
             {
-                remote_yaw_radian_ -= (M_PI / 180.f * (K_NORM * mcu_chassis_data_local.rotation + C_NORM)) * REMOTE_YAW_RATIO;
+                remote_yaw_radian_ += (M_PI / 180.f * (K_NORM * mcu_chassis_data_local.rotation + C_NORM)) * REMOTE_YAW_RATIO;
             }
             else
             {
@@ -135,6 +125,15 @@ void Robot::Task()
 
                 remote_yaw_radian_ += filtered_autoaim / AUTOAIM_YAW_RATIO;
             }
+
+            remote_yaw_radian_ = normalize_pi(remote_yaw_radian_);
+
+            gimbal_.SetTargetYawRadian(remote_yaw_radian_);
+        }
+        else if(mcu_chassis_data_local.switch_lr.switchcode.switch_r == SWITCH_MID || mcu_chassis_data_local.switch_lr.switchcode.switch_r == SWITCH_DOWN || 
+                mcu_comm_data_local.mouse_lr.mousecode.mouse_r == REMOTE_VT02_KEY_STATUS_FREE)
+        {
+            remote_yaw_radian_ += (M_PI / 180.f * (K_NORM * mcu_chassis_data_local.rotation + C_NORM)) * REMOTE_YAW_RATIO;
 
             remote_yaw_radian_ = normalize_pi(remote_yaw_radian_);
 
@@ -156,7 +155,7 @@ void Robot::Task()
 
 
         // 设置当前角度差
-        chassis_.SetNowYawRadianDiff(gimbal_.GetNowYawRadian());
+        chassis_.SetNowYawRadianDiff(-gimbal_.GetNowYawRadian());
 
         // 设置目标映射速度
         chassis_.SetTargetVxInGimbal((K_NORM * mcu_chassis_data_local.chassis_speed_x + C_NORM) * MAX_OMEGA_SPEED);
@@ -166,27 +165,28 @@ void Robot::Task()
         /****************************   模式   ****************************/
 
 
-        if(mcu_comm_data_local.mouse_lr.mousecode.mouse_l == REMOTE_VT02_KEY_STATUS_FREE)
+        // 拨弹盘开关
+        if(mcu_chassis_data_local.switch_lr.switchcode.switch_l == SWITCH_UP || (mcu_comm_data_local.keyboard.keycode.e && mcu_comm_data_local.mouse_lr.mousecode.mouse_l) ||
+          (mcu_comm_data_local.mouse_lr.mousecode.mouse_r &&  mcu_comm_data_local.mouse_lr.mousecode.mouse_l && mcu_autoaim_data_local.mode == PC_AUTOAIM_MODE_FIRE) || 
+          (mcu_chassis_data_local.switch_lr.switchcode.switch_l == SWITCH_DOWN && mcu_autoaim_data_local.mode == PC_AUTOAIM_MODE_FIRE))
+        {
+            reload_.SetTargetReloadTorque(MAX_RELORD_TORQUE);
+        }
+        else if(mcu_chassis_data_local.switch_lr.switchcode.switch_l == SWITCH_MID)
         {
             reload_.SetTargetReloadTorque(0);
         }
-        else if(mcu_comm_data_local.mouse_lr.mousecode.mouse_l && mcu_comm_data_local.mouse_lr.mousecode.mouse_r  && mcu_autoaim_data_local.mode == PC_AUTOAIM_MODE_FIRE)
+        else if(mcu_comm_data_local.mouse_lr.mousecode.mouse_r &&  mcu_comm_data_local.mouse_lr.mousecode.mouse_l && mcu_autoaim_data_local.mode == PC_AUTOAIM_MODE_FIRE)
         {
-            // 自瞄时，达到开火阈值才允许拨弹
-            reload_.SetTargetReloadTorque(MAX_RELORD_TORQUE);
-        }
-        else if(mcu_comm_data_local.mouse_lr.mousecode.mouse_l && mcu_comm_data_local.keyboard.keycode.f)
-        {
-            // 未开启自喵时，开启摩擦轮才允许拨弹
             reload_.SetTargetReloadTorque(MAX_RELORD_TORQUE);
         }
 
-        // 小陀螺 > 底盘跟随 > 云台独立
-        if(mcu_comm_data_local.keyboard.keycode.shift)
+        // 底盘模式
+        if(mcu_comm_data_local.keyboard.keycode.shift == REMOTE_DR16_KEY_STATUS_PRESS)
         {
             chassis_.SetChassisOperationMode(CHASSIS_OPERATION_MODE_SPIN);
         }
-        else if(mcu_comm_data_local.keyboard.keycode.v)
+        else if (mcu_comm_data_local.keyboard.keycode.ctrl|| mcu_chassis_data_local.switch_lr.switchcode.switch_r == SWITCH_DOWN)
         {
             chassis_.SetChassisOperationMode(CHASSIS_OPERATION_MODE_FOLLOW);
         }
@@ -194,13 +194,6 @@ void Robot::Task()
         {
             chassis_.SetChassisOperationMode(CHASSIS_OPERATION_MODE_NORMAL);
         }
-
-
-        if(mcu_comm_data_local.keyboard.keycode.ctrl)
-        {
-            gimbal_.motor_yaw_.CanSendSaveZero();
-        }
-
 
         osDelay(pdMS_TO_TICKS(1));
     }

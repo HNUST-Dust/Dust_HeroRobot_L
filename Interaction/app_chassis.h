@@ -23,7 +23,7 @@
 
 /* Exported macros -----------------------------------------------------------*/
 
-#define MAX_OMEGA_SPEED         15.f
+#define MAX_OMEGA_SPEED         12.f
 
 /* Exported types ------------------------------------------------------------*/
 
@@ -84,8 +84,8 @@ protected:
     float yaw_radian_diff_ = 0.0f;
 
     // 斜坡规划参数
-    float max_accel_xy_ = 100.f;
-    float max_accel_r_  = 100.f;
+    float max_accel_xy_ = 180.f;
+    float max_accel_r_  = 180.f;
 
     float now_accel_x_ = 0.0f;
     float now_accel_y_ = 0.0f;

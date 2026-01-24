@@ -43,7 +43,7 @@ void RemoteDjiVT02::Init(UART_HandleTypeDef *huart, Uart_Callback callback_funct
         .stack_size = 256,
         .priority = (osPriority_t) osPriorityNormal
     };
-    // osThreadNew(RemoteDjiVT02::TaskEntry, this, &kRemoteVT02TaskAttr);
+    osThreadNew(RemoteDjiVT02::TaskEntry, this, &kRemoteVT02TaskAttr);
 }
 
 /**
@@ -124,7 +124,7 @@ void RemoteDjiVT02::Task()
 {
     for(;;)
     {
-        // AlivePeriodElapsedCallback();
+        AlivePeriodElapsedCallback();
         osDelay(pdMS_TO_TICKS(50));     // 请勿修改频率
     }
 }
@@ -148,31 +148,5 @@ void RemoteDjiVT02::UartRxCpltCallback(uint8_t* buffer)
  */
 void RemoteDjiVT02::DataProcess(uint8_t* buffer)
 {
-    /****************************   原始数据    ****************************/
-
-
-    int16_t dx = (int16_t)((uint16_t)buffer[7] | ((uint16_t)buffer[8] << 8));
-    int16_t dy = (int16_t)((uint16_t)buffer[9] | ((uint16_t)buffer[10] << 8));
-    int16_t dz = (int16_t)((uint16_t)buffer[11] | ((uint16_t)buffer[12] << 8));
-
-    raw_data_.mouse_x = CLAMP(dx * 20, -32768, 32767);
-    raw_data_.mouse_y = CLAMP(dy, -32768, 32767);
-    raw_data_.mouse_z = CLAMP(dz, -32768, 32767);
-
-    raw_data_.mouse_l = buffer[13];
-    raw_data_.mouse_r = buffer[14];
-    raw_data_.keyboard.all = (uint16_t)buffer[15] | ((uint16_t)buffer[16] << 8);
-
-
-    /****************************   键鼠数据    ****************************/
-
-
-    output_.mouse_x = (int16_t)raw_data_.mouse_x;
-    output_.mouse_y = (float)raw_data_.mouse_y / 32767.f;
-    output_.mouse_z = (int16_t)raw_data_.mouse_z;
-
-    output_.mouse_l = raw_data_.mouse_l;
-    output_.mouse_r = raw_data_.mouse_r;
-
-    Process_Keyboard_Toggle(raw_data_.keyboard);
+    
 }

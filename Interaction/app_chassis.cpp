@@ -104,7 +104,7 @@ void Chassis::OperationMode()
         case (CHASSIS_OPERATION_MODE_FOLLOW):
         {
             chassis_follow_pid_.SetTarget(0);
-            chassis_follow_pid_.SetNow(yaw_radian_diff_);
+            chassis_follow_pid_.SetNow(-yaw_radian_diff_);
             chassis_follow_pid_.CalculatePeriodElapsedCallback();
 
             SetTargetVelocityRotation(chassis_follow_pid_.GetOut());
@@ -196,9 +196,9 @@ void Chassis::SlopePlanning()
 void Chassis::KinematicsInverseResolution()
 {
     motor_chassis_1_.SetTargetOmega( target_vx_in_chassis_ + target_vy_in_chassis_ + target_velocity_rotation_);
-    motor_chassis_2_.SetTargetOmega( target_vx_in_chassis_ - target_vy_in_chassis_ + target_velocity_rotation_);
+    motor_chassis_2_.SetTargetOmega(-target_vx_in_chassis_ + target_vy_in_chassis_ + target_velocity_rotation_);
     motor_chassis_3_.SetTargetOmega(-target_vx_in_chassis_ - target_vy_in_chassis_ + target_velocity_rotation_);
-    motor_chassis_4_.SetTargetOmega(-target_vx_in_chassis_ + target_vy_in_chassis_ + target_velocity_rotation_);
+    motor_chassis_4_.SetTargetOmega( target_vx_in_chassis_ - target_vy_in_chassis_ + target_velocity_rotation_);
 }
 
 /**

@@ -117,8 +117,6 @@ protected:
     GimbalControlType gimbal_control_type_ = GIMBAL_CONTROL_TYPE_MANUAL;
 
     void SelfResolution();
-    
-    void MotorNearestTransposition();
 
     void Output();
     
