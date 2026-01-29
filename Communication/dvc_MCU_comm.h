@@ -16,9 +16,7 @@
 #include "bsp_can.h"
 #include "FreeRTOS.h"
 #include "cmsis_os2.h"
-#include "string.h"
-#include "stdio.h"
-#include "dvc_remote_dr16.h"
+#include "dvc_remote.h"
 
 /* Exported macros -----------------------------------------------------------*/
 
@@ -73,8 +71,8 @@ struct McuChassisData
 struct McuCommData
 {
     uint8_t         start_of_frame = 0xAB;
-    RemoteDR16MouseLR  mouse_lr;
-    RemoteDR16Keyboard keyboard;
+    RemoteMouseLR   mouse_lr;
+    RemoteKeyboard  keyboard;
     McuConv         imu_yaw;                    // yaw轴角度
 };
 

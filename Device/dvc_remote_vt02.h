@@ -13,77 +13,11 @@
 
 /* Includes ------------------------------------------------------------------*/
 
-#include "bsp_uart.h"
-#include "FreeRTOS.h"
-#include "cmsis_os2.h"
-#include "alg_math.h"
+#include "dvc_remote.h"
 
 /* Exported macros -----------------------------------------------------------*/
 
 /* Exported types ------------------------------------------------------------*/
-
-/**
- * @brief 鼠标左右键联合体
- * 
- */
-union MouseLR
-{
-    uint8_t all;
-    struct 
-    {
-        uint8_t mouse_l : 1;
-        uint8_t mouse_r : 1;
-        uint8_t reserved : 6;
-    } mousecode;
-};
-
-/**
- * @brief 键盘联合体
- * 
- */
-union Keyboard
-{
-    uint16_t all;
-    struct
-    {
-        uint8_t w : 1;
-        uint8_t s : 1;
-        uint8_t a : 1;
-        uint8_t d : 1;
-        uint8_t shift : 1;
-        uint8_t ctrl : 1;
-        uint8_t q : 1;
-        uint8_t e : 1;
-        uint8_t r : 1;
-        uint8_t f : 1;
-        uint8_t g : 1;
-        uint8_t z : 1;
-        uint8_t x : 1;
-        uint8_t c : 1;
-        uint8_t v : 1;
-        uint8_t b : 1;
-    } keycode;
-};
-
-/**
- * @brief VT02按键状态枚举
- * 
- */
-enum RemoteVT02KeyStatus
-{
-    REMOTE_VT02_KEY_STATUS_FREE = 0,
-    REMOTE_VT02_KEY_STATUS_PRESS,
-};
-
-/**
- * @brief VT02在线状态枚举
- * 
- */
-enum RemoteVT02AliveStatus
-{
-    REMOTE_VT02_ALIVE_STATUS_DISABLE = 0,
-    REMOTE_VT02_ALIVE_STATUS_ENABLE  = 1,
-};
 
 /**
  * @brief VT02原始数据结构体
@@ -91,14 +25,20 @@ enum RemoteVT02AliveStatus
  */
 struct RmoteVT02RawData
 {
+    uint8_t start_of_frame = 0xA5;
+    uint16_t data_length;
+    uint8_t sequence;
+    uint8_t crc8;
+    uint16_t cmd_id;
+
     int32_t mouse_x;
     int32_t mouse_y;
     int32_t mouse_z;
 
-    int8_t mouse_l;
-    int8_t mouse_r;
+    uint8_t mouse_l;
+    uint8_t mouse_r;
 
-    Keyboard keyboard;
+    RemoteKeyboard keyboard;
 };
 
 /**
@@ -107,57 +47,27 @@ struct RmoteVT02RawData
  */
 struct RemoteVT02OutputData
 {
-    float mouse_x;
-    float mouse_y;
-    float mouse_z;
-
-    int8_t mouse_l;
-    int8_t mouse_r;
-
-    Keyboard keyboard;
+    RemoteMouse mouse;
+    RemoteKeyboard keyboard;
 };
 
 /**
  * @brief VT02类
  * 
  */
-class RemoteDjiVT02
+class RemoteDjiVT02 : public Remote
 {
 public:
     // 遥控器输出数据
     RemoteVT02OutputData output_;
 
-    // 遥控器状态
-    RemoteVT02AliveStatus remote_vt02_alive_status = REMOTE_VT02_ALIVE_STATUS_DISABLE;
-
-    void Init(UART_HandleTypeDef *huart, Uart_Callback callback_function, uint16_t rx_buffer_length);
-
-    void Task();
-
-    void AlivePeriodElapsedCallback();
-
-    void UartRxCpltCallback(uint8_t* buffer);
-
-    static void TaskEntry(void *param);  // FreeRTOS 入口，静态函数
-
 private:
-    // uart管理模块
-    UartManageObject* uart_manage_object_;
-
     // 遥控原始数据
     RmoteVT02RawData raw_data_;
 
-    // 当前时刻flag
-    uint32_t flag_ = 0;
+    void ClearData() override;
 
-    // 前一时刻flag
-    uint32_t pre_flag_ = 0;
-
-    void Process_Keyboard_Toggle(Keyboard current_raw);
-
-    void ClearData();
-
-    void DataProcess(uint8_t* buffer);
+    void DataProcess(uint8_t* buffer) override;
 };
 
 

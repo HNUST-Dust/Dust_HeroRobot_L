@@ -113,7 +113,7 @@ void Robot::Task()
 
         // 自瞄开启
         
-        if(mcu_chassis_data_local.switch_lr.switchcode.switch_r == SWITCH_UP || mcu_comm_data_local.mouse_lr.mousecode.mouse_r == REMOTE_VT02_KEY_STATUS_PRESS)
+        if(mcu_chassis_data_local.switch_lr.switchcode.switch_r == SWITCH_UP || mcu_comm_data_local.mouse_lr.mousecode.mouse_r == REMOTE_KEY_STATUS_PRESS)
         {
             if(mcu_autoaim_data_local.mode == PC_AUTOAIM_MODE_IDIE)
             {
@@ -131,7 +131,7 @@ void Robot::Task()
             gimbal_.SetTargetYawRadian(remote_yaw_radian_);
         }
         else if(mcu_chassis_data_local.switch_lr.switchcode.switch_r == SWITCH_MID || mcu_chassis_data_local.switch_lr.switchcode.switch_r == SWITCH_DOWN || 
-                mcu_comm_data_local.mouse_lr.mousecode.mouse_r == REMOTE_VT02_KEY_STATUS_FREE)
+                mcu_comm_data_local.mouse_lr.mousecode.mouse_r == REMOTE_KEY_STATUS_FREE)
         {
             remote_yaw_radian_ += (M_PI / 180.f * (K_NORM * mcu_chassis_data_local.rotation + C_NORM)) * REMOTE_YAW_RATIO;
 
@@ -182,7 +182,7 @@ void Robot::Task()
         }
 
         // 底盘模式
-        if(mcu_comm_data_local.keyboard.keycode.shift == REMOTE_DR16_KEY_STATUS_PRESS)
+        if(mcu_comm_data_local.keyboard.keycode.shift == REMOTE_KEY_STATUS_PRESS)
         {
             chassis_.SetChassisOperationMode(CHASSIS_OPERATION_MODE_SPIN);
         }

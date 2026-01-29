@@ -54,7 +54,6 @@ protected:
     float now_reload_omega_ = 0.0f;
     float now_reload_torque_ = 0.0f;
     float now_reload_radian_ = 0.0f;
-
     MotorDmStatus now_reload_status_ = MOTOR_DM_STATUS_ENABLE;
 
     // Reload目标角度
