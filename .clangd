@@ -1,18 +1,49 @@
 CompileFlags:
   Add:
     - --target=arm-none-eabi
-    - -mcpu=cortex-m4               # 根据你的 MCU
+    - -mcpu=cortex-m4
     - -mthumb
-    - -IC:\\DevTools\\Arm-GNU-Toolchian\\arm-none-eabi\\include
-    - -IC:\\DevTools\\Arm-GNU-Toolchian\\arm-none-eabi\\include\\c++\\11.2.1
-    - -IC:\\DevTools\\Arm-GNU-Toolchian\\arm-none-eabi\\include\\c++\\11.2.1\\arm-none-eabi
-    # - -std=gnu11  # 或 c++17
+    - -mfloat-abi=hard
+    - -mfpu=fpv4-sp-d16
+    - -ffunction-sections
+    - -fdata-sections
+    # 路径建议加上引号，防止空格导致解析失败
+    - "-IC:/Program Files/Path/gcc-arm-none-eabi/arm-none-eabi/include/c++/14.2.1"
+    - "-IC:/Program Files/Path/gcc-arm-none-eabi/arm-none-eabi/include/c++/14.2.1/arm-none-eabi"
+    - "-IC:/Program Files/Path/gcc-arm-none-eabi/arm-none-eabi/include"
+    - "-IC:/Program Files/Path/gcc-arm-none-eabi/lib/gcc/arm-none-eabi/14.2.1/include"
+    - "-IC:/Program Files/Path/gcc-arm-none-eabi/lib/gcc/arm-none-eabi/14.2.1/include-fixed"
+    - -I.
+    - -I./include
+    - -I./src
   Remove:
-    "-mthumb-interwork"
+    - -mthumb-interwork
 
+---
+# 针对 C++ 文件的专用配置段
+If:
+  PathMatch: [.*\.cpp, .*\.hpp, .*\.cc]
+CompileFlags:
+  Add:
+    - -std=gnu++17
+    - -fno-exceptions
+    - -fno-rtti
+
+---
+# 针对 C 文件的专用配置段
+If:
+  PathMatch: .*\.c
+CompileFlags:
+  Add:
+    - -std=gnu11
+
+---
+# 诊断配置（对所有文件生效）
 Diagnostics:
+  UnusedIncludes: None
   Suppress:
     - unused-includes
     - unknown_typename
     - unknown_typename_suggest
     - typename_requires_specqual
+    - pp_file_not_found

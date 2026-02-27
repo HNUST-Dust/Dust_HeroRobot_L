@@ -112,7 +112,7 @@ file(
 
 
 # 链接文件
-set(LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/Core/STM32F407IGHX_FLASH.ld)
+set(LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/STM32F407IGHX_FLASH.ld)
 
 # 芯片型号
 add_link_options(-Wl,-gc-sections,--print-memory-usage,-Map=${PROJECT_BINARY_DIR}/${PROJECT_NAME}.map)

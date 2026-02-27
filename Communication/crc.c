@@ -1,7 +1,17 @@
+/**
+ * @file crc.c
+ * @author qingyu
+ * @brief 
+ * @version 0.1
+ * @date 2026-02-06
+ * 
+ * @copyright Copyright (c) 2026
+ * 
+ */
 #include "crc.h"
 
 
-/***************************************CRC8校验*****************************************/
+/***************************************CRC8校锟斤拷*****************************************/
 
 
 //crc8 generator polynomial:G(x)=x8+x5+x4+1 
@@ -69,7 +79,7 @@ void append_crc8_check_sum(unsigned char *pchMessage, unsigned int dwLength)
 
 
 
-/***************************************CRC16校验*****************************************/
+/***************************************CRC16校锟斤拷*****************************************/
 
 
 
@@ -110,7 +120,7 @@ const uint16_t wCRC_Table[256] =
 	0x7bc7, 0x6a4e, 0x58d5, 0x495c, 0x3de3, 0x2c6a, 0x1ef1, 0x0f78
 };
 
-/* 获取校验位
+/* 锟斤拷取校锟斤拷位
 ** Descriptions: CRC16 checksum function 
 ** Input: Data to check,Stream length, initialized checksum 
 ** Output: CRC checksum 
@@ -131,7 +141,7 @@ uint16_t get_crc16_check_sum(uint8_t *pchMessage,uint32_t dwLength,uint16_t wCRC
 }
 
 
-/* 校验数据
+/* 校锟斤拷锟斤拷锟斤拷
 ** Descriptions: CRC16 Verify function 
 ** Input: Data to Verify,Stream length = Data + checksum 
 ** Output: True or False (CRC Verify Result) 
@@ -150,7 +160,7 @@ uint32_t verify_crc16_check_sum(uint8_t *pchMessage, uint32_t dwLength)
 
 
 
-/* 计算校验位并添加到包尾
+/* 锟斤拷锟斤拷校锟斤拷位锟斤拷锟斤拷锟接碉拷锟斤拷尾
 ** Descriptions: append CRC16 to the end of data 
 ** Input: Data to CRC and append,Stream length = Data + checksum 
 ** Output: True or False (CRC Verify Result) 
