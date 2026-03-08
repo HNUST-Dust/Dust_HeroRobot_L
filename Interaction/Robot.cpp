@@ -11,9 +11,6 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "Robot.h"
-#include "app_reload.h"
-#include "dvc_PC_comm.h"
-#include "dvc_remote_dr16.h"
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -83,7 +80,7 @@ void Robot::Task()
     mcu_chassis_data_local.chassis_speed_x     = 1024;
     mcu_chassis_data_local.chassis_speed_y     = 1024;
     mcu_chassis_data_local.rotation            = 1024;
-    mcu_chassis_data_local.switch_lr.all       = 15;
+    mcu_chassis_data_local.all                 = 0;
 
     // Mcu命令数据
     McuCommData mcu_comm_data_local;
@@ -112,8 +109,7 @@ void Robot::Task()
 
 
         // 自瞄开启
-        
-        if(mcu_chassis_data_local.switch_lr.switchcode.switch_r == SWITCH_UP || mcu_comm_data_local.mouse_lr.mousecode.mouse_r == REMOTE_KEY_STATUS_PRESS)
+        if(mcu_chassis_data_local.fn2 || mcu_comm_data_local.mouse_lr.mouse_r == REMOTE_KEY_STATUS_PRESS)
         {
             if(mcu_autoaim_data_local.mode == PC_AUTOAIM_MODE_IDIE)
             {
@@ -130,8 +126,7 @@ void Robot::Task()
 
             gimbal_.SetTargetYawRadian(remote_yaw_radian_);
         }
-        else if(mcu_chassis_data_local.switch_lr.switchcode.switch_r == SWITCH_MID || mcu_chassis_data_local.switch_lr.switchcode.switch_r == SWITCH_DOWN || 
-                mcu_comm_data_local.mouse_lr.mousecode.mouse_r == REMOTE_KEY_STATUS_FREE)
+        else if(!mcu_chassis_data_local.fn2 || mcu_comm_data_local.mouse_lr.mouse_r == REMOTE_KEY_STATUS_FREE)
         {
             remote_yaw_radian_ += (M_PI / 180.f * (K_NORM * mcu_chassis_data_local.rotation + C_NORM)) * REMOTE_YAW_RATIO;
 
@@ -166,27 +161,22 @@ void Robot::Task()
 
 
         // 拨弹盘开关
-        if(mcu_chassis_data_local.switch_lr.switchcode.switch_l == SWITCH_UP || (mcu_comm_data_local.keyboard.keycode.e && mcu_comm_data_local.mouse_lr.mousecode.mouse_l) ||
-          (mcu_comm_data_local.mouse_lr.mousecode.mouse_r &&  mcu_comm_data_local.mouse_lr.mousecode.mouse_l && mcu_autoaim_data_local.mode == PC_AUTOAIM_MODE_FIRE) || 
-          (mcu_chassis_data_local.switch_lr.switchcode.switch_l == SWITCH_DOWN && mcu_autoaim_data_local.mode == PC_AUTOAIM_MODE_FIRE))
+        if(mcu_chassis_data_local.fn1 || (mcu_comm_data_local.keyboard.e && mcu_comm_data_local.mouse_lr.mouse_l) ||
+          (mcu_comm_data_local.mouse_lr.mouse_r &&  mcu_comm_data_local.mouse_lr.mouse_l && mcu_autoaim_data_local.mode == PC_AUTOAIM_MODE_FIRE))
         {
             reload_.SetTargetReloadTorque(MAX_RELORD_TORQUE);
         }
-        else if(mcu_chassis_data_local.switch_lr.switchcode.switch_l == SWITCH_MID)
+        else if(!mcu_chassis_data_local.fn1)
         {
             reload_.SetTargetReloadTorque(0);
         }
-        else if(mcu_comm_data_local.mouse_lr.mousecode.mouse_r &&  mcu_comm_data_local.mouse_lr.mousecode.mouse_l && mcu_autoaim_data_local.mode == PC_AUTOAIM_MODE_FIRE)
-        {
-            reload_.SetTargetReloadTorque(MAX_RELORD_TORQUE);
-        }
 
         // 底盘模式
-        if(mcu_comm_data_local.keyboard.keycode.shift == REMOTE_KEY_STATUS_PRESS)
+        if(mcu_chassis_data_local.cns == 2 || mcu_comm_data_local.keyboard.shift)
         {
             chassis_.SetChassisOperationMode(CHASSIS_OPERATION_MODE_SPIN);
         }
-        else if (mcu_comm_data_local.keyboard.keycode.ctrl|| mcu_chassis_data_local.switch_lr.switchcode.switch_r == SWITCH_DOWN)
+        else if (mcu_chassis_data_local.cns == 0 || mcu_comm_data_local.keyboard.ctrl)
         {
             chassis_.SetChassisOperationMode(CHASSIS_OPERATION_MODE_FOLLOW);
         }

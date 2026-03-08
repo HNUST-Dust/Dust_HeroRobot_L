@@ -20,7 +20,7 @@
 
 /* Exported macros -----------------------------------------------------------*/
 
-#define MAX_RELORD_TORQUE       4.5f
+#define MAX_RELORD_TORQUE       5.0f
 
 /* Exported types ------------------------------------------------------------*/
 

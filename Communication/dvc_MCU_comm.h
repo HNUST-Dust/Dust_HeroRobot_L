@@ -57,11 +57,14 @@ struct McuChassisData
         uint8_t all;
         struct
         {
-            uint8_t switch_l : 2;
-            uint8_t switch_r : 2;
-            uint8_t reserved : 4;
-        } switchcode;
-    } switch_lr;
+            uint8_t pause : 1;
+            uint8_t cns : 2;
+            uint8_t fn1 : 1;
+            uint8_t fn2 : 1;
+            uint8_t trigger : 1;
+            uint8_t reserved : 2;
+        };
+    };
 };
 
 /**
@@ -71,8 +74,41 @@ struct McuChassisData
 struct McuCommData
 {
     uint8_t         start_of_frame = 0xAB;
-    RemoteMouseLR   mouse_lr;
-    RemoteKeyboard  keyboard;
+    union 
+    {
+        uint8_t all;
+        struct 
+        {
+            uint8_t mouse_l : 2;
+            uint8_t mouse_r : 2;
+            uint8_t reserved : 4;
+        };
+    } mouse_lr;
+    
+    union
+    {
+        uint16_t all;
+        struct
+        {
+            uint8_t w : 1;
+            uint8_t s : 1;
+            uint8_t a : 1;
+            uint8_t d : 1;
+            uint8_t shift : 1;
+            uint8_t ctrl : 1;
+            uint8_t q : 1;
+            uint8_t e : 1;
+            uint8_t r : 1;
+            uint8_t f : 1;
+            uint8_t g : 1;
+            uint8_t z : 1;
+            uint8_t x : 1;
+            uint8_t c : 1;
+            uint8_t v : 1;
+            uint8_t b : 1;
+        };
+    } keyboard;
+    
     McuConv         imu_yaw;                    // yaw轴角度
 };
 

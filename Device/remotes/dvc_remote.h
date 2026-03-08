@@ -70,22 +70,7 @@ union RemoteKeyboard
         uint8_t c : 1;
         uint8_t v : 1;
         uint8_t b : 1;
-    } keycode;
-};
-
-/**
- * @brief Remote鼠标左右键枚举
- * 
- */
-union RemoteMouseLR
-{
-    uint8_t all;
-    struct 
-    {
-        uint8_t mouse_l : 1;
-        uint8_t mouse_r : 1;
-        uint8_t reserved : 6;
-    } mousecode;
+    };
 };
 
 /**
@@ -97,7 +82,17 @@ struct RemoteMouse
     int16_t mouse_x;
     float mouse_y;
     float mouse_z;
-    RemoteMouseLR mouse_lr;
+    
+    union 
+    {
+        uint8_t all = 0;
+        struct
+        {
+            uint8_t mouse_l : 1;
+            uint8_t mouse_r : 1;
+            uint8_t reserved : 6;
+        };
+    };
 };
 
 /**
