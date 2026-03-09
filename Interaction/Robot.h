@@ -22,12 +22,13 @@
 #include "dvc_MCU_comm.h"
 #include "dvc_PC_comm.h"
 #include "dvc_remote_vt03.h"
-#include "imu.hpp"
+#include "dvc_referee.h"
 // app
 #include "app_reload.h"
 #include "app_gimbal.h"
 #include "app_chassis.h"
 #include "supercap.h"
+#include "imu.hpp"
 
 /* Exported macros -----------------------------------------------------------*/
 
@@ -48,18 +49,21 @@ public:
     Imu imu_;
     // 超级电容
     Supercap supercap_;
+    // 裁判系统
+    Referee referee_;
 
     void Init();
 
-    void Task();
-    
 protected:
 
     // 遥控累加yaw角值
     float remote_yaw_radian_ = 0.0f;
 
     // 机器人等级
-    int32_t robot_level_ = 1;
+    uint8_t robot_level_ = 1;
+
+    void Task();
+
     static void TaskEntry(void *param);  // FreeRTOS 入口，静态函数
 };
 

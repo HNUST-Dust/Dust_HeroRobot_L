@@ -13,7 +13,9 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "dvc_referee.h"
-#include "bsp_uart.h"
+#include "cmsis_os2.h"
+#include "projdefs.h"
+#include "ui_temp.h"
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -549,197 +551,42 @@ static const uint16_t crc_16_table[256] = {0x0000,
  */
 void Referee::Init(UART_HandleTypeDef *huart, Uart_Callback callback_function, uint16_t rx_buffer_length, uint8_t __Frame_Header)
 {
-    uart_manage_object_->uart_handle = huart;
-    uart_manage_object_->callback_function = callback_function;
-    uart_manage_object_->rx_buffer_length = rx_buffer_length;
     uart_init(huart, callback_function, rx_buffer_length);
     
+    ui_init_temp_Ungroup();
+
     frame_header_ = __Frame_Header;
+
+    static const osThreadAttr_t kRefereeTaskAttr = {
+        .name = "kRemoteTaskAttr",
+        .stack_size = 128 * 6,
+        .priority = (osPriority_t) osPriorityNormal
+    };
+    osThreadNew(Referee::TaskEntry, this, &kRefereeTaskAttr);
 }
 
 /**
- * @brief UART通信发送UI函数
- *
- * @param Graphic_1 图形地址
+ * @brief 任务入口（静态函数）—— osThreadNew 需要这个原型
+ * 
+ * @param argument 
  */
-void Referee::UartSendInteractionUiGraphic1(RefereeDataInteractionGraphicConfig *Graphic_1)
+void Referee::TaskEntry(void *argument)
 {
-    RefereeUartData *tmp_buffer = (RefereeUartData *) uart_manage_object_->tx_buffer;
-
-    // 裁判系统帧头
-    tmp_buffer->Frame_Header = 0xa5;
-    tmp_buffer->Data_Length = sizeof(RefereeTxDataInteractionGraphic1) - 2;
-    tmp_buffer->Sequence = sequence_;
-    tmp_buffer->CRC_8 = VerifyCrc8((uint8_t *) tmp_buffer, 4);
-    tmp_buffer->Referee_Command_ID = Referee_Command_ID_INTERACTION;
-
-    // 交互帧头
-    RefereeTxDataInteractionGraphic1 *tmp_data = (RefereeTxDataInteractionGraphic1 *) tmp_buffer->Data;
-    tmp_data->Header = Referee_Interaction_Command_ID_UI_GRAPHIC_1;
-    tmp_data->Sender = robot_status_.Robot_ID;
-    tmp_data->Receiver = static_cast<RefereeDataRobotsClientID>((int) (robot_status_.Robot_ID) + 0x100);
-
-    // UI发一个图形帧内容
-    tmp_data->Graphic[0] = *Graphic_1;
-
-    tmp_data->CRC_16 = VerifyCrc16((uint8_t *) tmp_buffer, 7 + tmp_buffer->Data_Length);
-
-    HAL_UART_Transmit(uart_manage_object_->uart_handle, (uint8_t *) tmp_buffer, 7 + sizeof(RefereeTxDataInteractionGraphic1), 100);
-
-    sequence_++;
-}
+    Referee *self = static_cast<Referee *>(argument);  // 还原 this 指针
+    self->Task();  // 调用成员函数
+};
 
 /**
- * @brief UART通信发送UI函数
- *
- * @param Graphic_1 图形地址
- * @param Graphic_2 图形地址
+ * @brief 任务函数
+ * 
  */
-void Referee::UartSendInteractionUiGraphic2(RefereeDataInteractionGraphicConfig *Graphic_1, RefereeDataInteractionGraphicConfig *Graphic_2)
+void Referee::Task()
 {
-    RefereeUartData *tmp_buffer = (RefereeUartData *) uart_manage_object_->tx_buffer;
-
-    // 裁判系统帧头
-    tmp_buffer->Frame_Header = 0xa5;
-    tmp_buffer->Data_Length = sizeof(RefereeTxDataInteractionGraphic2) - 2;
-    tmp_buffer->Sequence = sequence_;
-    tmp_buffer->CRC_8 = VerifyCrc8((uint8_t *) tmp_buffer, 4);
-    tmp_buffer->Referee_Command_ID = Referee_Command_ID_INTERACTION;
-
-    // 交互帧头
-    RefereeTxDataInteractionGraphic2 *tmp_data = (RefereeTxDataInteractionGraphic2 *) tmp_buffer->Data;
-    tmp_data->Header = Referee_Interaction_Command_ID_UI_GRAPHIC_2;
-    tmp_data->Sender = robot_status_.Robot_ID;
-    tmp_data->Receiver = static_cast<RefereeDataRobotsClientID>((int) (robot_status_.Robot_ID) + 0x100);
-
-    // UI发两个图形帧内容
-    tmp_data->Graphic[0] = *Graphic_1;
-    tmp_data->Graphic[1] = *Graphic_2;
-
-    tmp_data->CRC_16 = VerifyCrc16((uint8_t *) tmp_buffer, 7 + tmp_buffer->Data_Length);
-
-    HAL_UART_Transmit(uart_manage_object_->uart_handle, (uint8_t *) tmp_buffer, 7 + sizeof(RefereeTxDataInteractionGraphic2), 100);
-
-    sequence_++;
-}
-
-/**
- * @brief UART通信发送UI函数
- *
- * @param Graphic_1 图形地址
- * @param Graphic_2 图形地址
- * @param Graphic_3 图形地址
- * @param Graphic_4 图形地址
- * @param Graphic_5 图形地址
- */
-void Referee::UartSendInteractionUiGraphic5(RefereeDataInteractionGraphicConfig *Graphic_1, RefereeDataInteractionGraphicConfig *Graphic_2, RefereeDataInteractionGraphicConfig *Graphic_3, RefereeDataInteractionGraphicConfig *Graphic_4, RefereeDataInteractionGraphicConfig *Graphic_5)
-{
-    RefereeUartData *tmp_buffer = (RefereeUartData *) uart_manage_object_->tx_buffer;
-
-    // 裁判系统帧头
-    tmp_buffer->Frame_Header = 0xa5;
-    tmp_buffer->Data_Length = sizeof(RefereeTxDataInteractionGraphic5) - 2;
-    tmp_buffer->Sequence = sequence_;
-    tmp_buffer->CRC_8 = VerifyCrc8((uint8_t *) tmp_buffer, 4);
-    tmp_buffer->Referee_Command_ID = Referee_Command_ID_INTERACTION;
-
-    // 交互帧头
-    RefereeTxDataInteractionGraphic5 *tmp_data = (RefereeTxDataInteractionGraphic5 *) tmp_buffer->Data;
-    tmp_data->Header = Referee_Interaction_Command_ID_UI_GRAPHIC_5;
-    tmp_data->Sender = robot_status_.Robot_ID;
-    tmp_data->Receiver = static_cast<RefereeDataRobotsClientID>((int) (robot_status_.Robot_ID) + 0x100);
-
-    // UI发五个图形帧内容
-    tmp_data->Graphic[0] = *Graphic_1;
-    tmp_data->Graphic[1] = *Graphic_2;
-    tmp_data->Graphic[2] = *Graphic_3;
-    tmp_data->Graphic[3] = *Graphic_4;
-    tmp_data->Graphic[4] = *Graphic_5;
-
-    tmp_data->CRC_16 = VerifyCrc16((uint8_t *) tmp_buffer, 7 + tmp_buffer->Data_Length);
-
-    HAL_UART_Transmit(uart_manage_object_->uart_handle, (uint8_t *) tmp_buffer, 7 + sizeof(RefereeTxDataInteractionGraphic5), 100);
-
-    sequence_++;
-}
-
-/**
- * @brief UART通信发送UI函数
- *
- * @param Graphic_1 图形地址
- * @param Graphic_2 图形地址
- * @param Graphic_3 图形地址
- * @param Graphic_4 图形地址
- * @param Graphic_5 图形地址
- * @param Graphic_6 图形地址
- * @param Graphic_7 图形地址
- */
-void Referee::UartSendInteractionUiGraphic7(RefereeDataInteractionGraphicConfig *Graphic_1, RefereeDataInteractionGraphicConfig *Graphic_2, RefereeDataInteractionGraphicConfig *Graphic_3, RefereeDataInteractionGraphicConfig *Graphic_4, RefereeDataInteractionGraphicConfig *Graphic_5, RefereeDataInteractionGraphicConfig *Graphic_6, RefereeDataInteractionGraphicConfig *Graphic_7)
-{
-    RefereeUartData *tmp_buffer = (RefereeUartData *) uart_manage_object_->tx_buffer;
-
-    // 裁判系统帧头
-    tmp_buffer->Frame_Header = 0xa5;
-    tmp_buffer->Data_Length = sizeof(RefereeTxDataInteractionGraphic7) - 2;
-    tmp_buffer->Sequence = sequence_;
-    tmp_buffer->CRC_8 = VerifyCrc8((uint8_t *) tmp_buffer, 4);
-    tmp_buffer->Referee_Command_ID = Referee_Command_ID_INTERACTION;
-
-    // 交互帧头
-    RefereeTxDataInteractionGraphic7 *tmp_data = (RefereeTxDataInteractionGraphic7 *) tmp_buffer->Data;
-    tmp_data->Header = Referee_Interaction_Command_ID_UI_GRAPHIC_7;
-    tmp_data->Sender = robot_status_.Robot_ID;
-    tmp_data->Receiver = static_cast<RefereeDataRobotsClientID>((int) (robot_status_.Robot_ID) + 0x100);
-
-    // UI发七个图形帧内容
-    tmp_data->Graphic[0] = *Graphic_1;
-    tmp_data->Graphic[1] = *Graphic_2;
-    tmp_data->Graphic[2] = *Graphic_3;
-    tmp_data->Graphic[3] = *Graphic_4;
-    tmp_data->Graphic[4] = *Graphic_5;
-    tmp_data->Graphic[5] = *Graphic_6;
-    tmp_data->Graphic[6] = *Graphic_7;
-
-    tmp_data->CRC_16 = VerifyCrc16((uint8_t *) tmp_buffer, 7 + tmp_buffer->Data_Length);
-
-    HAL_UART_Transmit(uart_manage_object_->uart_handle, (uint8_t *) tmp_buffer, 7 + sizeof(RefereeTxDataInteractionGraphic7), 100);
-
-    sequence_++;
-}
-
-/**
- * @brief UART通信发送UI函数
- *
- * @param Graphic_String 图形地址
- * @param String_Content 字符串地址
- */
-void Referee::UartSendInteractionUiGraphicString(RefereeDataInteractionGraphicConfig *Graphic_String, const char *String_Content)
-{
-    RefereeUartData *tmp_buffer = (RefereeUartData *) uart_manage_object_->tx_buffer;
-
-    // 裁判系统帧头
-    tmp_buffer->Frame_Header = 0xa5;
-    tmp_buffer->Data_Length = sizeof(RefereeTxDataInteractionGraphicString) - 2;
-    tmp_buffer->Sequence = sequence_;
-    tmp_buffer->CRC_8 = VerifyCrc8((uint8_t *) tmp_buffer, 4);
-    tmp_buffer->Referee_Command_ID = Referee_Command_ID_INTERACTION;
-
-    // 交互帧头
-    RefereeTxDataInteractionGraphicString *tmp_data = (RefereeTxDataInteractionGraphicString *) tmp_buffer->Data;
-    tmp_data->Header = Referee_Interaction_Command_ID_UI_GRAPHIC_STRING;
-    tmp_data->Sender = robot_status_.Robot_ID;
-    tmp_data->Receiver = static_cast<RefereeDataRobotsClientID>((int) (robot_status_.Robot_ID) + 0x100);
-
-    // UI发字符串帧内容
-    tmp_data->Graphic_String = *Graphic_String;
-    bzero(tmp_data->String, 30);
-    strcpy((char *) tmp_data->String, String_Content);
-
-    tmp_data->CRC_16 = VerifyCrc16((uint8_t *) tmp_buffer, 7 + tmp_buffer->Data_Length);
-
-    HAL_UART_Transmit(uart_manage_object_->uart_handle, (uint8_t *) tmp_buffer, 7 + sizeof(RefereeTxDataInteractionGraphicString), 80);
-
-    sequence_++;
+    for (;;)
+    {
+        
+        osDelay(pdMS_TO_TICKS(150));
+    }
 }
 
 /**
@@ -747,12 +594,12 @@ void Referee::UartSendInteractionUiGraphicString(RefereeDataInteractionGraphicCo
  *
  * @param Rx_Data 接收的数据
  */
-void Referee::UartRxCpltCallback(uint8_t *Rx_Data, uint16_t Length)
+void Referee::UartRxCpltCallback(uint8_t *rx_data, uint16_t length)
 {
     // 滑动窗口, 判断裁判系统是否在线
     flag_ += 1;
 
-    DataProcess(Length);
+    DataProcess(rx_data, length);
 }
 
 /**
@@ -766,8 +613,6 @@ void Referee::AlivePeriodElapsedCallback()
     {
         // 裁判系统断开连接
         referee_status_ = Referee_Status_DISABLE;
-
-        uart_reinit(uart_manage_object_->uart_handle, uart_manage_object_->callback_function, uart_manage_object_->rx_buffer_length);
     }
     else
     {
@@ -834,14 +679,14 @@ uint16_t Referee::VerifyCrc16(uint8_t *Message, uint32_t Length)
  * 如遇到大规模丢包或错乱现象, 可重新启用校验过程
  *
  */
-void Referee::DataProcess(uint16_t Length)
+void Referee::DataProcess(uint8_t *rx_data, uint16_t length)
 {
     // 数据处理过程
     RefereeUartData *tmp_buffer;
 
-    for (int i = 0; i < Length;)
+    for (int i = 0; i < length;)
     {
-        tmp_buffer = (RefereeUartData *) &uart_manage_object_->rx_buffer[i];
+        tmp_buffer = (RefereeUartData*)&rx_data[i];
 
         // 未通过头校验
         if (tmp_buffer->Frame_Header != frame_header_)
@@ -862,143 +707,27 @@ void Referee::DataProcess(uint16_t Length)
             continue;
         }
         // 通过校验但帧不够长
-        if (i + 7 + tmp_buffer->Data_Length + 2 > Length)
+        if (i + 7 + tmp_buffer->Data_Length + 2 > length)
         {
             break;
         }
 
         switch (tmp_buffer->Referee_Command_ID)
         {
-        case (Referee_Command_ID_GAME_STATUS):
-        {
-            memcpy(&game_status_, tmp_buffer->Data, sizeof(RefereeRxDataGameStatus));
-
-            break;
+            case (Referee_Command_ID_ROBOT_BOOSTER):
+            {
+                memcpy(&robot_booster_, tmp_buffer->Data, sizeof(RefereeRxDataRobotBooster));
+                break;
+            }
+            default:
+            {
+                break;
+            }
         }
-        case (Referee_Command_ID_GAME_RESULT):
-        {
-            memcpy(&game_result_, tmp_buffer->Data, sizeof(RefereeRxDataGameResult));
-
-            break;
-        }
-        case (Referee_Command_ID_GAME_ROBOT_HP):
-        {
-            memcpy(&game_robot_hp_, tmp_buffer->Data, sizeof(RefereeRxDataGameRobotHP));
-
-            break;
-        }
-        case (Referee_Command_ID_EVENT_SELF_DATA):
-        {
-            memcpy(&event_self_data_, tmp_buffer->Data, sizeof(RefereeRxDataEventSelfData));
-
-            break;
-        }
-        case (Referee_Command_ID_EVENT_SELF_SUPPLY):
-        {
-            memcpy(&event_self_supply_, tmp_buffer->Data, sizeof(RefereeRxDataEventSelfSupply));
-
-            break;
-        }
-        case (Referee_Command_ID_EVENT_SELF_REFEREE_WARNING):
-        {
-            memcpy(&event_referee_warning_, tmp_buffer->Data, sizeof(RefereeRxDataEventRefereeWarning));
-
-            break;
-        }
-        case (Referee_Command_ID_EVENT_SELF_DART_STATUS):
-        {
-            memcpy(&event_dart_status_, tmp_buffer->Data, sizeof(RefereeRxDataEventDartStatus));
-
-            break;
-        }
-        case (Referee_Command_ID_ROBOT_STATUS):
-        {
-            memcpy(&robot_status_, tmp_buffer->Data, sizeof(RefereeRxDataRobotStatus));
-
-            break;
-        }
-        case (Referee_Command_ID_ROBOT_POWER_HEAT):
-        {
-            memcpy(&robot_power_heat_, tmp_buffer->Data, sizeof(RefereeRxDataRobotPowerHeat));
-
-            break;
-        }
-        case (Referee_Command_ID_ROBOT_POSITION):
-        {
-            memcpy(&robot_position_, tmp_buffer->Data, sizeof(RefereeRxDataRobotPosition));
-
-            break;
-        }
-        case (Referee_Command_ID_ROBOT_BUFF):
-        {
-            memcpy(&robot_buff_, tmp_buffer->Data, sizeof(RefereeRxDataRobotBuff));
-
-            break;
-        }
-        // case (Referee_Command_ID_ROBOT_AERIAL_STATUS):
-        // {
-        //     memcpy(&robot_aerial_status_, tmp_buffer->Data, sizeof(RefereeRxDataRobotAerialStatus));
-
-        //     break;
-        // }
-        case (Referee_Command_ID_ROBOT_DAMAGE):
-        {
-            memcpy(&robot_damage_, tmp_buffer->Data, sizeof(RefereeRxDataRobotDamage));
-
-            break;
-        }
-        case (Referee_Command_ID_ROBOT_BOOSTER):
-        {
-            memcpy(&robot_booster_, tmp_buffer->Data, sizeof(RefereeRxDataRobotBooster));
-
-            break;
-        }
-        case (Referee_Command_ID_ROBOT_REMAINING_AMMO):
-        {
-            memcpy(&robot_remaining_ammo_, tmp_buffer->Data, sizeof(RefereeRxDataRobotRemainingAmmo));
-
-            break;
-        }
-        case (Referee_Command_ID_ROBOT_RFID):
-        {
-            memcpy(&robot_rfid_, tmp_buffer->Data, sizeof(RefereeRxDataRobotRFID));
-
-            break;
-        }
-        case (Referee_Command_ID_ROBOT_DART_COMMAND):
-        {
-            memcpy(&robot_dart_command_, tmp_buffer->Data, sizeof(RefereeRxDataRobotDartCommand));
-
-            break;
-        }
-        case (Referee_Command_ID_ROBOT_SENTRY_LOCATION):
-        {
-            memcpy(&robot_dart_command_, tmp_buffer->Data, sizeof(RefereeRxDataRobotSentryLocation));
-
-            break;
-        }
-        case (Referee_Command_ID_ROBOT_RADAR_MARK):
-        {
-            memcpy(&robot_dart_command_, tmp_buffer->Data, sizeof(RefereeRxDataRobotRadarMark));
-
-            break;
-        }
-        case (Referee_Command_ID_ROBOT_SENTRY_DECISION):
-        {
-            memcpy(&robot_dart_command_, tmp_buffer->Data, sizeof(RefereeRxDataRobotSentryDecision));
-
-            break;
-        }
-        case (Referee_Command_ID_ROBOT_RADAR_DECISION):
-        {
-            memcpy(&robot_dart_command_, tmp_buffer->Data, sizeof(RefereeRxDataRobotRadarDecision));
-
-            break;
-        }
-        }
-
+        
         // 缓冲区直接推移
         i += 7 + tmp_buffer->Data_Length + 2;
     }
+    
 }
 

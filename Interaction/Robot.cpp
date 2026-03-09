@@ -11,6 +11,7 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "Robot.h"
+#include "cmsis_os2.h"
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -47,6 +48,9 @@ void Robot::Init()
     
     // 超级电容初始化 
     // supercap_.Init(&hcan1);
+
+    // 裁判系统
+    referee_.Init(&huart6, uart6_callback_function, UART_BUFFER_LENGTH);
 
     static const osThreadAttr_t kRobotTaskAttr = 
     {
@@ -161,12 +165,13 @@ void Robot::Task()
 
 
         // 拨弹盘开关
-        if(mcu_chassis_data_local.fn1 || (mcu_comm_data_local.keyboard.e && mcu_comm_data_local.mouse_lr.mouse_l) ||
-          (mcu_comm_data_local.mouse_lr.mouse_r &&  mcu_comm_data_local.mouse_lr.mouse_l && mcu_autoaim_data_local.mode == PC_AUTOAIM_MODE_FIRE))
+        // if(mcu_chassis_data_local.fn1 || (mcu_comm_data_local.keyboard.e && mcu_comm_data_local.mouse_lr.mouse_l) ||
+        //   (mcu_comm_data_local.mouse_lr.mouse_r &&  mcu_comm_data_local.mouse_lr.mouse_l && mcu_autoaim_data_local.mode == PC_AUTOAIM_MODE_FIRE))
+        if(mcu_chassis_data_local.fn1)
         {
             reload_.SetTargetReloadTorque(MAX_RELORD_TORQUE);
         }
-        else if(!mcu_chassis_data_local.fn1)
+        else
         {
             reload_.SetTargetReloadTorque(0);
         }

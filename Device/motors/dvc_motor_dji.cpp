@@ -476,20 +476,16 @@ void MotorDjiC620::CalculatePeriodElapsedCallback()
 {
     PidCalculate();
 
+    float max_allowed_current = current_max_ * power_factor_;
+    
     float tmp_value = target_current_ + feedforward_current_;
-    math_constrain(&tmp_value, -current_max_, current_max_);
+    math_constrain(&tmp_value, -max_allowed_current, max_allowed_current);
     out_ = tmp_value * current_to_out_;
 
-    // 计算功率估计值
     power_estimate_ = power_calculate(
-                        power_k_0_,
-                        power_k_1_,
-                        power_k_2_,
-                        power_k_3_,
-                        power_k_4_,
-                        power_k_5_,
-                        target_current_,
-                        rx_data_.now_omega * gearbox_rate_);
+                        power_k_0_, power_k_1_, power_k_2_, 
+                        power_k_3_, power_k_4_, power_k_5_,
+                        target_current_, rx_data_.now_omega * gearbox_rate_);
 
     Output();
 
@@ -499,6 +495,7 @@ void MotorDjiC620::CalculatePeriodElapsedCallback()
         feedforward_omega_ = 0.0f;
     }
 }
+
 
 /**
  * @brief TIM定时器中断功率控制善后计算回调函数, 计算周期取决于电机反馈周期

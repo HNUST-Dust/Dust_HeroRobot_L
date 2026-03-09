@@ -73,7 +73,7 @@ struct McuChassisData
  */
 struct McuCommData
 {
-    uint8_t         start_of_frame = 0xAB;
+    uint8_t start_of_frame = 0xAB;
     union 
     {
         uint8_t all;
@@ -109,7 +109,7 @@ struct McuCommData
         };
     } keyboard;
     
-    McuConv         imu_yaw;                    // yaw轴角度
+    McuConv imu_yaw;                    // yaw轴角度
 };
 
 /**
@@ -118,20 +118,20 @@ struct McuCommData
  */
 struct McuRecvAutoaimData
 {
-    uint8_t         start_of_yaw_frame = 0xAC;
-    uint8_t         mode;                       // 0-空闲 1-自瞄不开火 2-自瞄开火
-    McuConv         autoaim_yaw_ang;            // 自瞄yaw轴角度
+    uint8_t start_of_yaw_frame = 0xAC;
+    uint8_t mode;                       // 0-空闲 1-自瞄不开火 2-自瞄开火
+    McuConv autoaim_yaw_ang;            // 自瞄yaw轴角度
 };
 
 /**
  * @brief Mcu发送自瞄数据结构体
  * 
  */
-struct McuSendAutoaimData
+struct McuSendRefereeData
 {
-    uint8_t         start_of_yaw_frame = 0xAC;
+    uint8_t start_of_yaw_frame = 0xAD;
 
-    McuConv         autoaim_yaw_ang;            // 自瞄累加弧度
+    McuConv bullet_speed;            // 自瞄累加弧度
 };
 
 /**
@@ -163,14 +163,12 @@ public:
         {0, 0, 0, 0},
     };
 
-    McuSendAutoaimData send_autoaim_data_ = 
+    McuSendRefereeData send_referee_data_ = 
     {   0xAC,
         {0, 0, 0, 0},
     };
 
     void Init(CAN_HandleTypeDef *hcan, uint8_t can_rx_id, uint8_t can_tx_id);
-
-    void Task();
 
     void ClearData();
 
@@ -195,6 +193,10 @@ private:
     uint32_t alive_count_ = 0;
 
     McuAliveState mcu_alive_state_ = MCU_ALIVE_STATE_DISABLE;
+
+    void Task();
+
+    void SendRefereeData();
 
     void DataProcess(uint8_t* rx_data);
 

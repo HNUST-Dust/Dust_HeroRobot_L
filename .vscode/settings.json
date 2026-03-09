@@ -9,6 +9,6 @@
     "workbench.tree.renderIndentGuides": "always",
     "explorer.compactFolders": false,
     "workbench.colorCustomizations": {
-        "tree.indentGuidesStroke": "#ffffff"
+        "tree.indentGuidesStroke": "#00ff73"
     }
 }

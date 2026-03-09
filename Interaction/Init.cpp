@@ -12,6 +12,7 @@
 
 #include "Init.h"
 #include "Robot.h"
+#include "bsp_uart.h"
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -82,11 +83,19 @@ void can2_callback_function(CanRxBuffer* CAN_RxMessage)
     }
 }
 
+void uart6_callback_function(uint8_t *buffer, uint16_t length)
+{
+    robot_.referee_.UartRxCpltCallback(buffer, length);
+
+    robot_.mcu_comm_.send_referee_data_.bullet_speed.f = robot_.referee_.GetShootSpeed();
+}
+
 /* Function prototypes -------------------------------------------------------*/
 
 void Init()
 {
     can_init(&hcan1, can1_callback_function);
     can_init(&hcan2, can2_callback_function);
+
     robot_.Init();
 }

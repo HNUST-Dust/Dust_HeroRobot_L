@@ -18,7 +18,6 @@
 #include "ins_task.h"
 #include "bsp_dwt.h"
 #include "bsp_usb.h"
-#include "crc.h"
 
 /* Exported macros -----------------------------------------------------------*/
 

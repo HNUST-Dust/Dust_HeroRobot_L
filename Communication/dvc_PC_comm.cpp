@@ -85,7 +85,7 @@ void PcComm::Send_Message()
     send_autoaim_data.crc16 = 0;
 
     memcpy(buffer, &send_autoaim_data, lenth);
-    append_crc16_check_sum(buffer, lenth);
+    // append_crc16_check_sum(buffer, lenth);
     
     usb_transmit(buffer, lenth);
 }

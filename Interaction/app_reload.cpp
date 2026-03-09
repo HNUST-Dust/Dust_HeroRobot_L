@@ -110,6 +110,7 @@ void Reload::Task()
         else
         {
             motor_reload_.CanSendEnter();
+            osDelay(pdMS_TO_TICKS(1000));
         }
         osDelay(pdMS_TO_TICKS(1));
     }
