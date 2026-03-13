@@ -44,6 +44,8 @@ void McuComm::Init(CAN_HandleTypeDef* hcan, uint8_t can_rx_id, uint8_t can_tx_id
      can_rx_id_ = can_rx_id;
      can_tx_id_ = can_tx_id;
 
+     first_power_on = true;
+
      static const osThreadAttr_t kMcuCommTaskAttr = {
           .name = "mcu_comm_task",
           .stack_size = 512,
@@ -74,6 +76,7 @@ void McuComm::ClearData()
      recv_chassis_data_.chassis_speed_y = 1024;
      recv_chassis_data_.rotation = 1024;
      recv_chassis_data_.all = 0;
+     recv_chassis_data_.cns = 1;
 
      recv_comm_data_.mouse_lr.all = 0;
      recv_comm_data_.keyboard.all = 0;
@@ -173,7 +176,7 @@ void McuComm::DataProcess(uint8_t* rx_data)
 
                recv_comm_data_.keyboard.all = rx_data[2] << 8 | rx_data[3];
 
-               memcpy(&recv_comm_data_.imu_yaw.b, &rx_data[4], 4);
+               memcpy(&recv_comm_data_.imu_yaw, &rx_data[4], 4);
 
                break;
           }
@@ -182,6 +185,8 @@ void McuComm::DataProcess(uint8_t* rx_data)
                recv_autoaim_data_.mode = rx_data[1];
 
                memcpy(&recv_autoaim_data_.autoaim_yaw_ang, &rx_data[2], 4);
+
+               recv_autoaim_data_.first_power_on = rx_data[6];
 
                break;
           }

@@ -76,7 +76,7 @@ struct McuCommData
     uint8_t start_of_frame = 0xAB;
     union 
     {
-        uint8_t all;
+        uint8_t all = 0;
         struct 
         {
             uint8_t mouse_l : 2;
@@ -109,7 +109,7 @@ struct McuCommData
         };
     } keyboard;
     
-    McuConv imu_yaw;                    // yaw轴角度
+    float imu_yaw = 0.0f;                    // yaw轴角度
 };
 
 /**
@@ -121,6 +121,7 @@ struct McuRecvAutoaimData
     uint8_t start_of_yaw_frame = 0xAC;
     uint8_t mode;                       // 0-空闲 1-自瞄不开火 2-自瞄开火
     McuConv autoaim_yaw_ang;            // 自瞄yaw轴角度
+    uint8_t first_power_on = true;
 };
 
 /**
@@ -154,7 +155,7 @@ public:
         0xAB,
         0,
         0,
-        {0,0,0,0},
+        0.0f,
     };
 
     McuRecvAutoaimData recv_autoaim_data_ = 
@@ -167,6 +168,8 @@ public:
     {   0xAC,
         {0, 0, 0, 0},
     };
+
+    uint8_t first_power_on = true;
 
     void Init(CAN_HandleTypeDef *hcan, uint8_t can_rx_id, uint8_t can_tx_id);
 

@@ -4,8 +4,9 @@
 
 #include "ui_interface.h"
 #include <string.h>
+#include "usart.h"
 
-extern int _write(int file, char *ptr, int len);
+extern int uart_transmit_dma(UART_HandleTypeDef* huart, const uint8_t* data, uint16_t length);
 
 uint8_t seq = 0;
 int ui_self_id = 1;
@@ -15,7 +16,7 @@ void print_message(const uint8_t *message, const int length) {
         return;
     }
 
-    _write(0, (char *)message, length);
+    uart_transmit_dma(&huart6, message, (uint16_t)length);
 }
 
 const unsigned char CRC8_TAB[256] = {

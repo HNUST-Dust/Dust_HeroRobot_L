@@ -97,5 +97,7 @@ void Init()
     can_init(&hcan1, can1_callback_function);
     can_init(&hcan2, can2_callback_function);
 
+    uart_init(&huart1, nullptr, UART_BUFFER_LENGTH);
+
     robot_.Init();
 }

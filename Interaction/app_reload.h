@@ -17,6 +17,7 @@
 #include "FreeRTOS.h"
 #include "cmsis_os2.h"
 #include "stdio.h"
+#include "Timer.hpp"
 
 /* Exported macros -----------------------------------------------------------*/
 
@@ -46,15 +47,15 @@ public:
     inline float GetTargetReloadOmega();
 
     inline float GetTargetReloadTorque();
-
+    
 protected:
+    // 掉线保护定时器
+    Timer NoConnectTimer{200};
 
-    // Reload当前值
     float now_reload_angle_ = 0.0f;
     float now_reload_omega_ = 0.0f;
     float now_reload_torque_ = 0.0f;
     float now_reload_radian_ = 0.0f;
-    MotorDmStatus now_reload_status_ = MOTOR_DM_STATUS_ENABLE;
 
     // Reload目标角度
     float target_reload_angle_ = 0.0f;
@@ -64,6 +65,8 @@ protected:
 
     // Reload角度差
     float reload_angle_diff = 0.0f;
+
+    MotorDmControlStatusNormal now_reload_status_ = MOTOR_DM_CONTROL_STATUS_DISABLE;
 
     void SelfResolution();
 

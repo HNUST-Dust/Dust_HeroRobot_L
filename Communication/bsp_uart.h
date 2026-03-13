@@ -97,6 +97,9 @@ void uart6_callback_function(uint8_t* buffer, uint16_t length);
 int __io_putchar(int ch);
 int _write(int file, char *ptr, int len);
 
+// UART DMA发送接口（用于裁判系统UI等）
+int uart_transmit_dma(UART_HandleTypeDef* huart, const uint8_t* data, uint16_t length);
+
 #ifdef __cplusplus
 }
 #endif

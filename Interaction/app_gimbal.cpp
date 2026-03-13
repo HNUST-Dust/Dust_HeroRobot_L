@@ -113,6 +113,7 @@ void Gimbal::TaskEntry(void *argument)
 void Gimbal::SelfResolution()
 {
     // 获取当前数据
+    now_yaw_status_ = motor_yaw_.GetControlStatus();
     now_yaw_omega_ = motor_yaw_.GetNowOmega();
     now_yaw_angle_ = motor_yaw_.GetNowAngle() / PI * 180.f;
     now_yaw_radian_ = normalize_pi(motor_yaw_.GetNowAngle());
@@ -155,7 +156,49 @@ void Gimbal::Task()
     for (;;)
     {
         SelfResolution();
-        Output();
+
+        if (now_yaw_status_ == MOTOR_DM_CONTROL_STATUS_ENABLE)
+        {
+            Output();
+            if (!NoConnectTimer.IsFinish()) {
+                NoConnectTimer.Finish();
+            }
+        }
+        else if(now_yaw_status_ == MOTOR_DM_CONTROL_STATUS_DISABLE)
+        {
+            NoConnectTimer.Tick([&]()
+            {
+                uint16_t step = NoConnectTimer.GetTimerCounter();
+
+                if (step == 0) {
+                    motor_yaw_.CanSendEnter();
+                }
+
+                now_yaw_status_ = motor_yaw_.GetControlStatus();
+
+                if (now_yaw_status_ == MOTOR_DM_CONTROL_STATUS_ENABLE) {
+                    NoConnectTimer.Finish();
+                }
+            });
+        } 
+        else
+        {
+            NoConnectTimer.Tick([&]()
+            {
+                uint16_t step = NoConnectTimer.GetTimerCounter();
+
+                if (step == 0) {
+                    motor_yaw_.CanSendClearError();
+                }
+
+                now_yaw_status_ = motor_yaw_.GetControlStatus();
+
+                if (now_yaw_status_ == MOTOR_DM_CONTROL_STATUS_ENABLE) {
+                    NoConnectTimer.Finish();
+                }
+            });
+        }
+        
         osDelay(pdMS_TO_TICKS(1));
     }
 }

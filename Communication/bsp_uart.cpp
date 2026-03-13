@@ -57,40 +57,17 @@ static const UartMapEntry uart_map_inquiry_[]
  */
 int _write(int file, char *ptr, int len)
 {
-    UartManageObject* uart_obj = &uart6_manage_object;
-    
-    // 使用 ISR 安全版本的临界区，兼容中断和任务上下文
-    UBaseType_t uxSavedInterruptStatus = taskENTER_CRITICAL_FROM_ISR();
-    
-    for (int i = 0; i < len; i++) 
-	{
-        uart_obj->tx_buffer[uart_obj->tx_head] = ptr[i];
-        uart_obj->tx_head = (uart_obj->tx_head + 1) % UART_BUFFER_LENGTH;
-    }
-    
-    if (!uart_obj->tx_busy) 
-	{
-        uart_obj->tx_busy = 1;
-        
-        // 计算要发送的数据长度
-        uint16_t send_len;
-        if (uart_obj->tx_head >= uart_obj->tx_tail) {
-            send_len = uart_obj->tx_head - uart_obj->tx_tail;
-        } else {
-            // 环形缓冲区回绕时，只发送到缓冲区末尾
-            send_len = UART_BUFFER_LENGTH - uart_obj->tx_tail;
-        }
+    (void)file;
 
-        if (send_len > 0) {
-			uart_obj->tx_sending_len = send_len;
-            HAL_UART_Transmit_DMA(uart_obj->uart_handle, &uart_obj->tx_buffer[uart_obj->tx_tail], send_len);
-        } else {
-            uart_obj->tx_busy = 0;  // 没有数据可发送，清除忙标志
-        }
+    if (ptr == NULL || len <= 0) {
+        return 0;
     }
-    
-    taskEXIT_CRITICAL_FROM_ISR(uxSavedInterruptStatus);
-    
+
+    int ret = uart_transmit_dma(&huart1, (const uint8_t*)ptr, (uint16_t)len);
+    if (ret != 0) {
+        return -1;
+    }
+
     return len;
 }
 
@@ -151,6 +128,65 @@ void uart_reinit(UART_HandleTypeDef* huart, Uart_Callback callback_function, uin
 	HAL_UART_AbortReceive(uart_manage_object->uart_handle);
 	memset(uart_manage_object->rx_buffer, 0, uart_manage_object->rx_buffer_length);
 	HAL_UARTEx_ReceiveToIdle_DMA(uart_manage_object->uart_handle, uart_manage_object->rx_buffer, uart_manage_object->rx_buffer_length);
+}
+
+/**
+ * @brief UART DMA发送函数（用于裁判系统UI等非printf场景）
+ * 
+ * @param huart UART句柄
+ * @param data 数据指针
+ * @param length 数据长度
+ * @return int 0:成功, -1:失败
+ */
+int uart_transmit_dma(UART_HandleTypeDef* huart, const uint8_t* data, uint16_t length)
+{
+    UartManageObject* uart_obj = GetUartManageObject(huart);
+    if (!uart_obj) {
+        return -1;
+    }
+    
+    // 使用 ISR 安全版本的临界区
+    UBaseType_t uxSavedInterruptStatus = taskENTER_CRITICAL_FROM_ISR();
+    
+    // 写入环形缓冲区
+    for (uint16_t i = 0; i < length; i++) 
+    {
+        uint16_t next_head = (uart_obj->tx_head + 1) % UART_BUFFER_LENGTH;
+        
+        // 检查缓冲区是否已满
+        if (next_head == uart_obj->tx_tail) {
+            taskEXIT_CRITICAL_FROM_ISR(uxSavedInterruptStatus);
+            return -1;  // 缓冲区满
+        }
+        
+        uart_obj->tx_buffer[uart_obj->tx_head] = data[i];
+        uart_obj->tx_head = next_head;
+    }
+    
+    // 如果UART空闲，启动DMA传输
+    if (!uart_obj->tx_busy) 
+    {
+        uart_obj->tx_busy = 1;
+        
+        uint16_t send_len;
+        if (uart_obj->tx_head >= uart_obj->tx_tail) {
+            send_len = uart_obj->tx_head - uart_obj->tx_tail;
+        } else {
+            // 环形缓冲区回绕时，只发送到缓冲区末尾
+            send_len = UART_BUFFER_LENGTH - uart_obj->tx_tail;
+        }
+
+        if (send_len > 0) {
+            uart_obj->tx_sending_len = send_len;
+            HAL_UART_Transmit_DMA(uart_obj->uart_handle, &uart_obj->tx_buffer[uart_obj->tx_tail], send_len);
+        } else {
+            uart_obj->tx_busy = 0;
+        }
+    }
+    
+    taskEXIT_CRITICAL_FROM_ISR(uxSavedInterruptStatus);
+    
+    return 0;
 }
 
 /** 

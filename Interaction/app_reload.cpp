@@ -74,9 +74,7 @@ void Reload::TaskEntry(void *argument)
  */
 void Reload::SelfResolution()
 {
-    motor_reload_.AlivePeriodElapsedCallback();
-
-    now_reload_status_ = motor_reload_.GetStatus();
+    now_reload_status_ = motor_reload_.GetControlStatus();
     now_reload_omega_ = motor_reload_.GetNowOmega();
     now_reload_angle_ = normalize_angle(motor_reload_.GetNowAngle() / PI * 180.f);
     now_reload_torque_ = motor_reload_.GetNowTorque();
@@ -98,20 +96,52 @@ void Reload::Output()
  */
 void Reload::Task()
 {
-    for(;;)
+    for (;;)
     {
-        // 自身姿态解算
         SelfResolution();
-        // 拨弹盘电机掉线处理
-        if(now_reload_status_ == MOTOR_DM_STATUS_ENABLE)
+
+        if (now_reload_status_ == MOTOR_DM_CONTROL_STATUS_ENABLE)
         {
             Output();
+            if (!NoConnectTimer.IsFinish()) {
+                NoConnectTimer.Finish();
+            }
         }
+        else if(now_reload_status_ == MOTOR_DM_CONTROL_STATUS_DISABLE)
+        {
+            NoConnectTimer.Tick([&]()
+            {
+                uint16_t step = NoConnectTimer.GetTimerCounter();
+
+                if (step == 0) {
+                    motor_reload_.CanSendEnter();
+                }
+
+                now_reload_status_ = motor_reload_.GetControlStatus();
+
+                if (now_reload_status_ == MOTOR_DM_CONTROL_STATUS_ENABLE) {
+                    NoConnectTimer.Finish();
+                }
+            });
+        } 
         else
         {
-            motor_reload_.CanSendEnter();
-            osDelay(pdMS_TO_TICKS(1000));
+            NoConnectTimer.Tick([&]()
+            {
+                uint16_t step = NoConnectTimer.GetTimerCounter();
+
+                if (step == 0) {
+                    motor_reload_.CanSendClearError();
+                }
+
+                now_reload_status_ = motor_reload_.GetControlStatus();
+
+                if (now_reload_status_ == MOTOR_DM_CONTROL_STATUS_ENABLE) {
+                    NoConnectTimer.Finish();
+                }
+            });
         }
+        
         osDelay(pdMS_TO_TICKS(1));
     }
 }

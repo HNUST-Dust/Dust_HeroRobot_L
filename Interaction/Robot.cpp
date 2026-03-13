@@ -12,12 +12,13 @@
 
 #include "Robot.h"
 #include "cmsis_os2.h"
+#include <cstdio>
 
 /* Private macros ------------------------------------------------------------*/
 
 #define K_NORM                  1.f / 660.f
 #define C_NORM                  -256.f / 165.f
-#define REMOTE_YAW_RATIO        0.7f
+#define REMOTE_YAW_RATIO        0.5f
 #define AUTOAIM_YAW_RATIO       150.f
 
 /* Private types -------------------------------------------------------------*/
@@ -85,16 +86,20 @@ void Robot::Task()
     mcu_chassis_data_local.chassis_speed_y     = 1024;
     mcu_chassis_data_local.rotation            = 1024;
     mcu_chassis_data_local.all                 = 0;
+    mcu_chassis_data_local.cns                 = 1;
 
     // Mcu命令数据
     McuCommData mcu_comm_data_local;
     mcu_comm_data_local.mouse_lr.all           = 0;
     mcu_comm_data_local.keyboard.all           = 0;
-    mcu_comm_data_local.imu_yaw.f              = 0;
+    mcu_comm_data_local.imu_yaw                = 0.0f;
 
     // Mcu自瞄数据
     McuRecvAutoaimData mcu_autoaim_data_local;
     mcu_autoaim_data_local.autoaim_yaw_ang.f   = 0;
+    mcu_autoaim_data_local.first_power_on      = true;
+
+    uint8_t count = 0;
 
     for(;;)
     {
@@ -107,6 +112,33 @@ void Robot::Task()
         mcu_comm_data_local = *(static_cast<const McuCommData*>(&(mcu_comm_.recv_comm_data_)));
         mcu_autoaim_data_local = *(static_cast<const McuRecvAutoaimData*>(&(mcu_comm_.recv_autoaim_data_)));
         __enable_irq();
+
+        if (mcu_autoaim_data_local.first_power_on) {
+            remote_yaw_radian_ = 0;
+            mcu_autoaim_data_local.first_power_on = false;
+        } 
+
+        // MCU掉线检测保护
+        if(mcu_comm_.GetMcuAliveState() == MCU_ALIVE_STATE_ENABLE)
+        {
+            if (mcu_comm_.first_power_on) 
+            {
+                remote_yaw_radian_ = normalize_angle_pm_pi(mcu_comm_data_local.imu_yaw);
+                mcu_comm_.first_power_on = false;
+            }
+
+            gimbal_.SetImuYawAngle(normalize_angle_pm_pi(mcu_comm_data_local.imu_yaw));
+        }
+        else if (mcu_comm_.GetMcuAliveState() == MCU_ALIVE_STATE_DISABLE) 
+        {
+            if (mcu_comm_.first_power_on)
+            {
+                remote_yaw_radian_ = gimbal_.GetTargetYawRadian();
+                mcu_comm_.first_power_on = false;
+            }
+
+            gimbal_.SetImuYawAngle(gimbal_.GetTargetYawRadian());
+        }
 
 
         /****************************   云台   ****************************/
@@ -139,16 +171,6 @@ void Robot::Task()
             gimbal_.SetTargetYawRadian(remote_yaw_radian_);
         }
         
-        // MCU掉线检测保护
-        if(mcu_comm_.GetMcuAliveState() == MCU_ALIVE_STATE_ENABLE)
-        {
-            gimbal_.SetImuYawAngle(normalize_angle_pm_pi(mcu_comm_data_local.imu_yaw.f));
-        }
-        else if (mcu_comm_.GetMcuAliveState() == MCU_ALIVE_STATE_DISABLE) 
-        {
-            gimbal_.SetImuYawAngle(gimbal_.GetTargetYawRadian());
-        }
-
 
         /****************************   底盘   ****************************/
 
@@ -165,9 +187,9 @@ void Robot::Task()
 
 
         // 拨弹盘开关
-        // if(mcu_chassis_data_local.fn1 || (mcu_comm_data_local.keyboard.e && mcu_comm_data_local.mouse_lr.mouse_l) ||
-        //   (mcu_comm_data_local.mouse_lr.mouse_r &&  mcu_comm_data_local.mouse_lr.mouse_l && mcu_autoaim_data_local.mode == PC_AUTOAIM_MODE_FIRE))
-        if(mcu_chassis_data_local.fn1)
+        if((mcu_chassis_data_local.fn1 && mcu_autoaim_data_local.mode == PC_AUTOAIM_MODE_FIRE) || (mcu_comm_data_local.keyboard.e && mcu_comm_data_local.mouse_lr.mouse_l) ||
+          (mcu_comm_data_local.mouse_lr.mouse_r && mcu_comm_data_local.mouse_lr.mouse_l && mcu_autoaim_data_local.mode == PC_AUTOAIM_MODE_FIRE))
+        // if(mcu_chassis_data_local.fn1)
         {
             reload_.SetTargetReloadTorque(MAX_RELORD_TORQUE);
         }
@@ -189,6 +211,12 @@ void Robot::Task()
         {
             chassis_.SetChassisOperationMode(CHASSIS_OPERATION_MODE_NORMAL);
         }
+
+        if (++count > 20)
+        {
+            printf("%d,%d,%d\n", mcu_chassis_data_local.fn1, mcu_autoaim_data_local.mode, reload_.motor_reload_.GetStatus());
+        }
+
 
         osDelay(pdMS_TO_TICKS(1));
     }
