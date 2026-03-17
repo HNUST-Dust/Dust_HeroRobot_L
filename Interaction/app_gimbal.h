@@ -91,8 +91,6 @@ public:
 
     inline void SetImuYawAngle(float imu_yaw_angle);
 
-    inline void SetNowYawZeroPoint(float yaw_zero_point);
-
 protected:
     // 掉线保护定时器
     Timer NoConnectTimer{200};
@@ -109,9 +107,7 @@ protected:
     float target_yaw_torque_ = 0.0f;
     float target_yaw_radian_ = 0.0f;
 
-    float yaw_zero_point_ = 0.0f;
-
-    // 陀螺仪yaw轴角度]
+    // 陀螺仪yaw轴角度
     float imu_yaw_angle_ = 0.0f;
     
     // yaw角角度差，用于角度环
@@ -262,16 +258,6 @@ inline void Gimbal::SetTargetYawRadian(float target_yaw_radian)
 inline void Gimbal::SetImuYawAngle(float imu_yaw_angle)
 {
     imu_yaw_angle_ = imu_yaw_angle;
-}
-
-/**
- * @brief 设定当前yaw轴零点
- * 
- * @param yaw_zero_point 
- */
-inline void Gimbal::SetNowYawZeroPoint(float yaw_zero_point)
-{
-    yaw_zero_point_ = yaw_zero_point;
 }
 
 #endif

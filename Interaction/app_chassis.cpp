@@ -11,11 +11,15 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "app_chassis.h"
+#include "string.h"
+#include "ui_g.h"
+#include <math.h>
 
 /* Private macros ------------------------------------------------------------*/
 
-#define DT      0.001f
-#define MAX_GYROSCOPE_SPEED     10.f
+constexpr float MAX_GYROSCOPE_SPEED = 20.f;
+constexpr float MAX_OMEGA_SPEED = 12.f;
+constexpr float DT = 0.001f;
 
 /* Private types -------------------------------------------------------------*/
 
@@ -91,24 +95,44 @@ void Chassis::OperationMode()
     {
         case (CHASSIS_OPERATION_MODE_SPIN):
         {
-            SetTargetVelocityRotation(MAX_GYROSCOPE_SPEED);
+            ui_all_flag.chassis = 1;
 
+            SetMaxOmegaSpeed(MAX_OMEGA_SPEED / 2.f);
+            SetTargetVelocityRotation(MAX_GYROSCOPE_SPEED);
             break;
         }
         case (CHASSIS_OPERATION_MODE_NORMAL):
         {
-            SetTargetVelocityRotation(0);
+            ui_all_flag.chassis = 2;
 
+            SetMaxOmegaSpeed(MAX_OMEGA_SPEED);
+            SetTargetVelocityRotation(0);
             break;
         }
-        case (CHASSIS_OPERATION_MODE_FOLLOW):
+        case (CHASSIS_OPERATION_MODE_FOLLOW_HEAD):
         {
+            ui_all_flag.chassis = 3;
+
             chassis_follow_pid_.SetTarget(0);
             chassis_follow_pid_.SetNow(-yaw_radian_diff_);
             chassis_follow_pid_.CalculatePeriodElapsedCallback();
 
+            SetMaxOmegaSpeed(MAX_OMEGA_SPEED);
             SetTargetVelocityRotation(chassis_follow_pid_.GetOut());
+            break;
+        }
+        case (CHASSIS_OPERATION_MODE_FOLLOW_BACK):
+        {
+            ui_all_flag.chassis = 4;
 
+            float back_radian_diff = normalize_pi(yaw_radian_diff_ + PI);
+
+            chassis_follow_pid_.SetTarget(0);
+            chassis_follow_pid_.SetNow(-back_radian_diff);
+            chassis_follow_pid_.CalculatePeriodElapsedCallback();
+
+            SetMaxOmegaSpeed(MAX_OMEGA_SPEED);
+            SetTargetVelocityRotation(chassis_follow_pid_.GetOut());
             break;
         }
         default:
@@ -116,7 +140,6 @@ void Chassis::OperationMode()
             SetTargetVelocityRotation(0);
             break;
         }
-        
     }
 }
 
@@ -142,13 +165,13 @@ void Chassis::SlopePlanning()
     now_accel_y_ = (target_vy_in_chassis_ - last_target_vy_) / DT;
     now_accel_r_ = (target_velocity_rotation_ - last_target_rotation_) / DT;
 
-    if(fabs(now_accel_x_) > max_accel_xy_)
+    if (fabs(now_accel_x_) > max_accel_xy_)
     {
         if(target_vx_in_chassis_ > last_target_vx_)
         {
             target_vx_in_chassis_ = (last_target_vx_ + max_accel_xy_ * DT) < target_vx_in_chassis_ ? 
                                     (last_target_vx_ + max_accel_xy_ * DT) : target_vx_in_chassis_;
-        } 
+        }
         else
         {
             target_vx_in_chassis_ = (last_target_vx_ - max_accel_xy_ * DT) > target_vx_in_chassis_ ? 
@@ -156,7 +179,7 @@ void Chassis::SlopePlanning()
         }
     }
 
-    if(fabs(now_accel_y_) > max_accel_xy_)
+    if (fabs(now_accel_y_) > max_accel_xy_)
     {
         if(target_vy_in_chassis_ > last_target_vy_) 
         {
@@ -170,7 +193,7 @@ void Chassis::SlopePlanning()
         }
     }
 
-    if(fabs(now_accel_r_) > max_accel_r_)
+    if (fabs(now_accel_r_) > max_accel_r_)
     {
         if(target_velocity_rotation_ > last_target_rotation_) 
         {

@@ -4,12 +4,19 @@
 
 #include "ui_interface.h"
 #include <string.h>
+#include "cmsis_os2.h"
 #include "usart.h"
 
 extern int uart_transmit_dma(UART_HandleTypeDef* huart, const uint8_t* data, uint16_t length);
 
 uint8_t seq = 0;
 int ui_self_id = 1;
+ui_flag ui_all_flag = 
+{
+    0,
+    0,
+    0,
+};
 
 void print_message(const uint8_t *message, const int length) {
     if (message == NULL || length <= 0) {
@@ -17,6 +24,7 @@ void print_message(const uint8_t *message, const int length) {
     }
 
     uart_transmit_dma(&huart6, message, (uint16_t)length);
+    osDelay(30);
 }
 
 const unsigned char CRC8_TAB[256] = {

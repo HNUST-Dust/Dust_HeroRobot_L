@@ -11,10 +11,6 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "app_reload.h"
-#include "alg_math.h"
-#include "cmsis_os2.h"
-#include "dvc_motor_dm.h"
-#include "projdefs.h"
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -32,12 +28,6 @@ void Reload::Init()
 {
     // 拨弹盘4310电机初始化
     motor_reload_.Init(&hcan2, 0x08, 0x07, MOTOR_DM_CONTROL_METHOD_NORMAL_MIT, 12.5f, 30.f, 10.f);
-    
-    motor_reload_.CanSendClearError();
-    osDelay(pdMS_TO_TICKS(1000));
-
-    motor_reload_.CanSendEnter();
-    osDelay(pdMS_TO_TICKS(1000));
 
     motor_reload_.SetKp(0);
 
@@ -123,7 +113,7 @@ void Reload::Task()
                     NoConnectTimer.Finish();
                 }
             });
-        } 
+        }
         else
         {
             NoConnectTimer.Tick([&]()
@@ -145,3 +135,9 @@ void Reload::Task()
         osDelay(pdMS_TO_TICKS(1));
     }
 }
+
+
+
+
+
+

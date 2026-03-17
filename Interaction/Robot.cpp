@@ -11,8 +11,7 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "Robot.h"
-#include "cmsis_os2.h"
-#include <cstdio>
+#include "ui_interface.h"
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -97,7 +96,7 @@ void Robot::Task()
     // Mcu自瞄数据
     McuRecvAutoaimData mcu_autoaim_data_local;
     mcu_autoaim_data_local.autoaim_yaw_ang.f   = 0;
-    mcu_autoaim_data_local.first_power_on      = true;
+    mcu_autoaim_data_local.is_autoaim_start    = 0;
 
     uint8_t count = 0;
 
@@ -113,11 +112,7 @@ void Robot::Task()
         mcu_autoaim_data_local = *(static_cast<const McuRecvAutoaimData*>(&(mcu_comm_.recv_autoaim_data_)));
         __enable_irq();
 
-        if (mcu_autoaim_data_local.first_power_on) {
-            remote_yaw_radian_ = 0;
-            mcu_autoaim_data_local.first_power_on = false;
-        } 
-
+        
         // MCU掉线检测保护
         if(mcu_comm_.GetMcuAliveState() == MCU_ALIVE_STATE_ENABLE)
         {
@@ -179,22 +174,26 @@ void Robot::Task()
         chassis_.SetNowYawRadianDiff(-gimbal_.GetNowYawRadian());
 
         // 设置目标映射速度
-        chassis_.SetTargetVxInGimbal((K_NORM * mcu_chassis_data_local.chassis_speed_x + C_NORM) * MAX_OMEGA_SPEED);
-        chassis_.SetTargetVyInGimbal((K_NORM * mcu_chassis_data_local.chassis_speed_y + C_NORM) * MAX_OMEGA_SPEED);
+        chassis_.SetTargetVxInGimbal((K_NORM * mcu_chassis_data_local.chassis_speed_x + C_NORM) * chassis_.GetMaxOmegaSpeed());
+        chassis_.SetTargetVyInGimbal((K_NORM * mcu_chassis_data_local.chassis_speed_y + C_NORM) * chassis_.GetMaxOmegaSpeed());
         
         
         /****************************   模式   ****************************/
 
 
         // 拨弹盘开关
-        if((mcu_chassis_data_local.fn1 && mcu_autoaim_data_local.mode == PC_AUTOAIM_MODE_FIRE) || (mcu_comm_data_local.keyboard.e && mcu_comm_data_local.mouse_lr.mouse_l) ||
+        if((mcu_chassis_data_local.fn1 && mcu_autoaim_data_local.mode == PC_AUTOAIM_MODE_FIRE) || (mcu_comm_data_local.keyboard.f && mcu_comm_data_local.mouse_lr.mouse_l) ||
           (mcu_comm_data_local.mouse_lr.mouse_r && mcu_comm_data_local.mouse_lr.mouse_l && mcu_autoaim_data_local.mode == PC_AUTOAIM_MODE_FIRE))
         // if(mcu_chassis_data_local.fn1)
         {
+            ui_all_flag.reload = 1;
+
             reload_.SetTargetReloadTorque(MAX_RELORD_TORQUE);
         }
         else
         {
+            ui_all_flag.reload = 0;
+
             reload_.SetTargetReloadTorque(0);
         }
 
@@ -205,16 +204,29 @@ void Robot::Task()
         }
         else if (mcu_chassis_data_local.cns == 0 || mcu_comm_data_local.keyboard.ctrl)
         {
-            chassis_.SetChassisOperationMode(CHASSIS_OPERATION_MODE_FOLLOW);
+            float follow_change = gimbal_.GetNowYawRadian();
+
+            if (-PI / 2 <= follow_change && follow_change <= PI / 2) {
+                chassis_.SetChassisOperationMode(CHASSIS_OPERATION_MODE_FOLLOW_HEAD);
+            } else {
+                chassis_.SetChassisOperationMode(CHASSIS_OPERATION_MODE_FOLLOW_BACK);
+            }
         }
         else
         {
             chassis_.SetChassisOperationMode(CHASSIS_OPERATION_MODE_NORMAL);
         }
 
+        // 用于ui检测是否开摩擦轮
+        if (mcu_comm_data_local.mouse_lr.mouse_r || mcu_comm_data_local.keyboard.f) {
+            ui_all_flag.shoot = 1;
+        } else {
+            ui_all_flag.shoot = 0;
+        }
+
         if (++count > 20)
         {
-            printf("%d,%d,%d\n", mcu_chassis_data_local.fn1, mcu_autoaim_data_local.mode, reload_.motor_reload_.GetStatus());
+            // printf("%f\n", gimbal_.GetNowYawRadian());
         }
 
 

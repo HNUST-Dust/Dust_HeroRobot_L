@@ -8,8 +8,7 @@
  * @copyright Copyright (c) 2025
  * 
  */
-#ifndef PC_COMM_H
-#define PC_COMM_H
+#pragma once
 
 /* Includes ------------------------------------------------------------------*/
 
@@ -156,6 +155,7 @@ public:
     void UpdataAutoaimData();
 
 private:
+
     uint32_t flag_ = 0;
 
     uint32_t pre_flag_ = 0;
@@ -178,4 +178,3 @@ private:
 
 /* Exported function declarations --------------------------------------------*/
 
-#endif

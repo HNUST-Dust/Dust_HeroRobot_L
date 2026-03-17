@@ -8,8 +8,7 @@
  * @copyright Copyright (c) 2025
  * 
  */
-#ifndef MODULES_COMM_DVC_MCU_COMM_H
-#define MODULES_COMM_DVC_MCU_COMM_H
+#pragma once
 
 /* Includes ------------------------------------------------------------------*/
 
@@ -119,9 +118,9 @@ struct McuCommData
 struct McuRecvAutoaimData
 {
     uint8_t start_of_yaw_frame = 0xAC;
-    uint8_t mode;                       // 0-空闲 1-自瞄不开火 2-自瞄开火
-    McuConv autoaim_yaw_ang;            // 自瞄yaw轴角度
-    uint8_t first_power_on = true;
+    uint8_t mode;                           // 0-空闲 1-自瞄不开火 2-自瞄开火
+    McuConv autoaim_yaw_ang;                // 自瞄yaw轴角度
+    uint8_t is_autoaim_start = 0;
 };
 
 /**
@@ -132,7 +131,7 @@ struct McuSendRefereeData
 {
     uint8_t start_of_yaw_frame = 0xAD;
 
-    McuConv bullet_speed;            // 自瞄累加弧度
+    McuConv bullet_speed;                   // 自瞄累加弧度
 };
 
 /**
@@ -148,6 +147,7 @@ public:
         1024,
         1024,
         1024,
+        0,
     };
 
     McuCommData recv_comm_data_ = 
@@ -218,4 +218,3 @@ inline McuAliveState McuComm::GetMcuAliveState()
     return (mcu_alive_state_);
 }
 
-#endif

@@ -186,7 +186,7 @@ void McuComm::DataProcess(uint8_t* rx_data)
 
                memcpy(&recv_autoaim_data_.autoaim_yaw_ang, &rx_data[2], 4);
 
-               recv_autoaim_data_.first_power_on = rx_data[6];
+               recv_autoaim_data_.is_autoaim_start = rx_data[6];
 
                break;
           }

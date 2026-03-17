@@ -1,21 +1,17 @@
 /**
  * @file dvc_referee.cpp
- * @author yssickjgd (1345578933@qq.com)
- * @brief PM01裁判系统
+ * @author qingyu
+ * @brief 
  * @version 0.1
- * @date 2023-08-29 0.1 23赛季定稿
- * @date 2024-01-30 1.1 适配1.6.1通信协议
- *
- * @copyright USTC-RoboWalker (c) 2023-2024
- *
+ * @date 2026-03-17
+ * 
+ * @copyright Copyright (c) 2026
+ * 
  */
-
 /* Includes ------------------------------------------------------------------*/
 
 #include "dvc_referee.h"
-#include "cmsis_os2.h"
-#include "projdefs.h"
-#include "ui_temp.h"
+#include "ui.h"
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -552,9 +548,11 @@ static const uint16_t crc_16_table[256] = {0x0000,
 void Referee::Init(UART_HandleTypeDef *huart, Uart_Callback callback_function, uint16_t rx_buffer_length, uint8_t __Frame_Header)
 {
     uart_init(huart, callback_function, rx_buffer_length);
-    
-    ui_init_temp_Ungroup();
 
+    ui_all_flag.chassis = 2;
+    ui_all_flag.reload = 0;
+    ui_all_flag.shoot = 0;
+    
     frame_header_ = __Frame_Header;
 
     static const osThreadAttr_t kRefereeTaskAttr = {
@@ -582,10 +580,19 @@ void Referee::TaskEntry(void *argument)
  */
 void Referee::Task()
 {
+    ui_flag last_ui_flag = ui_all_flag;
+
     for (;;)
     {
+        ui_init_g_Ungroup();
         
-        osDelay(pdMS_TO_TICKS(150));
+        if (last_ui_flag.chassis != ui_all_flag.chassis || last_ui_flag.reload != ui_all_flag.reload || last_ui_flag.shoot != ui_all_flag.shoot)
+        {
+            ui_update_g_Ungroup();
+            last_ui_flag = ui_all_flag;
+        }
+
+        osDelay(pdMS_TO_TICKS(100));
     }
 }
 
@@ -714,6 +721,11 @@ void Referee::DataProcess(uint8_t *rx_data, uint16_t length)
 
         switch (tmp_buffer->Referee_Command_ID)
         {
+            case (Referee_Command_ID_ROBOT_STATUS):
+            {
+                memcpy(&robot_status_, tmp_buffer->Data, sizeof(RefereeRxDataRobotStatus));
+                break;
+            }
             case (Referee_Command_ID_ROBOT_BOOSTER):
             {
                 memcpy(&robot_booster_, tmp_buffer->Data, sizeof(RefereeRxDataRobotBooster));

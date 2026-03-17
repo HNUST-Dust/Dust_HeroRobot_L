@@ -23,8 +23,6 @@
 
 /* Exported macros -----------------------------------------------------------*/
 
-#define MAX_OMEGA_SPEED         12.f
-
 /* Exported types ------------------------------------------------------------*/
 
 /**
@@ -35,7 +33,8 @@ enum ChassisOperationMode
 {
     CHASSIS_OPERATION_MODE_SPIN = 0,
     CHASSIS_OPERATION_MODE_NORMAL,
-    CHASSIS_OPERATION_MODE_FOLLOW,
+    CHASSIS_OPERATION_MODE_FOLLOW_HEAD,
+    CHASSIS_OPERATION_MODE_FOLLOW_BACK,
 };
 
 
@@ -65,6 +64,10 @@ public:
 
     inline void SetNowYawRadianDiff(float yaw_radian_diff);
 
+    inline void SetMaxOmegaSpeed(float max_omega_speed);
+
+    inline float GetMaxOmegaSpeed();
+
 protected:
     // 底盘操作模式
     ChassisOperationMode chassis_opreation_mode_ = CHASSIS_OPERATION_MODE_NORMAL;
@@ -84,8 +87,8 @@ protected:
     float yaw_radian_diff_ = 0.0f;
 
     // 斜坡规划参数
-    float max_accel_xy_ = 180.f;
-    float max_accel_r_  = 180.f;
+    float max_accel_xy_ = 100.f;
+    float max_accel_r_  = 100.f;
 
     float now_accel_x_ = 0.0f;
     float now_accel_y_ = 0.0f;
@@ -95,7 +98,7 @@ protected:
     float last_target_vy_ = 0.0f;
     float last_target_rotation_ = 0.0f;
 
-// 底盘驱动
+    float max_omega_speed_ = 12.f;
 
     void OperationMode();
 
@@ -164,4 +167,24 @@ inline void Chassis::SetNowYawRadianDiff(float yaw_radian_diff)
     yaw_radian_diff_ = yaw_radian_diff;
 }
 
-#endif // !APP_CHASSIS_H_
+/**
+ * @brief 设置底盘最大角速度
+ * 
+ * @param max_omega_speed
+ */
+inline void Chassis::SetMaxOmegaSpeed(float max_omega_speed)
+{
+    max_omega_speed_ = max_omega_speed;
+}
+
+/**
+ * @brief 获取底盘最大角速度
+ * 
+ * @return float
+ */
+inline float Chassis::GetMaxOmegaSpeed()
+{
+    return max_omega_speed_;
+}
+
+#endif

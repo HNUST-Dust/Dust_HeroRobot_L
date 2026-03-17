@@ -11,6 +11,7 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "app_gimbal.h"
+#include <cstdio>
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -67,17 +68,9 @@ void Gimbal::Init()
     // 4310电机初始化
     motor_yaw_.Init(&hcan2, 0x06, 0x05, MOTOR_DM_CONTROL_METHOD_NORMAL_MIT, 12.5f, 30.f, 10.f);
 
-    // 发送清除错误指令
-    motor_yaw_.CanSendClearError();
-    osDelay(pdMS_TO_TICKS(1000));
-    
     // 保存零点（当云台与底盘上电有偏差时需重新设置零点）
     // motor_yaw_.CanSendSaveZero();
     // osDelay(pdMS_TO_TICKS(1000));
-
-    // 发送使能命令
-    motor_yaw_.CanSendEnter();
-    osDelay(pdMS_TO_TICKS(1000));
 
     // 力矩控制
     motor_yaw_.SetKp(0);  // MIT模式kp

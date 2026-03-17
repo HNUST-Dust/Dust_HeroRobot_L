@@ -46,16 +46,21 @@ public:
     template<typename T>
     void Tick(T && func) 
     {
-        if (is_period_finish_) {
-            if (is_period_changed_) period_ = period_buffer_, is_period_changed_ = false;
-
+        if (is_period_finish_) 
+        {
+            if (is_period_changed_) {
+                period_ = period_buffer_, is_period_changed_ = false;
+            }
             is_period_finish_ = false;
         }
         
-        if (count_ < period_) {
+        if (count_ < period_) 
+        {
             func();
             count_++;
-        } else {
+        }
+        else 
+        {
             is_period_finish_ = true;
             Reset();
         }

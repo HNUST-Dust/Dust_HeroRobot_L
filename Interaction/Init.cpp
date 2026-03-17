@@ -12,7 +12,7 @@
 
 #include "Init.h"
 #include "Robot.h"
-#include "bsp_uart.h"
+#include "ui_interface.h"
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -88,6 +88,7 @@ void uart6_callback_function(uint8_t *buffer, uint16_t length)
     robot_.referee_.UartRxCpltCallback(buffer, length);
 
     robot_.mcu_comm_.send_referee_data_.bullet_speed.f = robot_.referee_.GetShootSpeed();
+    ui_self_id = robot_.referee_.GetSelfID();
 }
 
 /* Function prototypes -------------------------------------------------------*/
