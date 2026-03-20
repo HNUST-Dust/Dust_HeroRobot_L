@@ -9,14 +9,16 @@
 
 extern int uart_transmit_dma(UART_HandleTypeDef* huart, const uint8_t* data, uint16_t length);
 
-uint8_t seq = 0;
-int ui_self_id = 1;
 ui_flag ui_all_flag = 
 {
     0,
     0,
     0,
+    0,
 };
+
+uint8_t seq = 0;
+int ui_self_id = 1;
 
 void print_message(const uint8_t *message, const int length) {
     if (message == NULL || length <= 0) {

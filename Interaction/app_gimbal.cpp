@@ -11,7 +11,6 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "app_gimbal.h"
-#include <cstdio>
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -22,7 +21,7 @@
 /* Private function declarations ---------------------------------------------*/
 
 /**
- * @brief 
+ * @brief Gimbal
  * 
  */
 void Gimbal::Init()

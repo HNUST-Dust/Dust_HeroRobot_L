@@ -83,6 +83,12 @@ void can2_callback_function(CanRxBuffer* CAN_RxMessage)
     }
 }
 
+/**
+ * @brief uart6回调函数
+ * 
+ * @param buffer 
+ * @param length 
+ */
 void uart6_callback_function(uint8_t *buffer, uint16_t length)
 {
     robot_.referee_.UartRxCpltCallback(buffer, length);

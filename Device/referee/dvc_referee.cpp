@@ -11,7 +11,8 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "dvc_referee.h"
-#include "ui.h"
+#include "ui_g.h"
+#include "ui_interface.h"
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -586,7 +587,8 @@ void Referee::Task()
     {
         ui_init_g_Ungroup();
         
-        if (last_ui_flag.chassis != ui_all_flag.chassis || last_ui_flag.reload != ui_all_flag.reload || last_ui_flag.shoot != ui_all_flag.shoot)
+        if (last_ui_flag.chassis != ui_all_flag.chassis || last_ui_flag.reload != ui_all_flag.reload || 
+            last_ui_flag.shoot != ui_all_flag.shoot || last_ui_flag.autoaim != ui_all_flag.autoaim)
         {
             ui_update_g_Ungroup();
             last_ui_flag = ui_all_flag;

@@ -165,6 +165,11 @@ void Robot::Task()
 
             gimbal_.SetTargetYawRadian(remote_yaw_radian_);
         }
+
+        if (mcu_comm_data_local.keyboard.v)
+        {
+            gimbal_.motor_yaw_.CanSendSaveZero();
+        }
         
 
         /****************************   底盘   ****************************/
@@ -184,7 +189,6 @@ void Robot::Task()
         // 拨弹盘开关
         if((mcu_chassis_data_local.fn1 && mcu_autoaim_data_local.mode == PC_AUTOAIM_MODE_FIRE) || (mcu_comm_data_local.keyboard.f && mcu_comm_data_local.mouse_lr.mouse_l) ||
           (mcu_comm_data_local.mouse_lr.mouse_r && mcu_comm_data_local.mouse_lr.mouse_l && mcu_autoaim_data_local.mode == PC_AUTOAIM_MODE_FIRE))
-        // if(mcu_chassis_data_local.fn1)
         {
             ui_all_flag.reload = 1;
 

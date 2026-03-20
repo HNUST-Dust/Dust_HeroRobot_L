@@ -59,9 +59,6 @@ protected:
     // 遥控累加yaw角值
     float remote_yaw_radian_ = 0.0f;
 
-    // 机器人等级
-    uint8_t robot_level_ = 1;
-
     void Task();
 
     static void TaskEntry(void *param);  // FreeRTOS 入口，静态函数

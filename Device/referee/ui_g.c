@@ -334,6 +334,87 @@ void _ui_remove_g_Ungroup_6() {
     SEND_MESSAGE((uint8_t *) &ui_g_Ungroup_6, sizeof(ui_g_Ungroup_6));
 }
 
+ui_string_frame_t ui_g_Ungroup_7;
+ui_interface_string_t* ui_g_Ungroup_autoaim = &(ui_g_Ungroup_7.option);
+
+void _ui_init_g_Ungroup_7() {
+    ui_g_Ungroup_7.option.figure_name[0] = 0;
+    ui_g_Ungroup_7.option.figure_name[1] = 0;
+    ui_g_Ungroup_7.option.figure_name[2] = 8;
+    ui_g_Ungroup_7.option.operate_type = 1;
+
+    ui_g_Ungroup_autoaim->figure_type = 7;
+    ui_g_Ungroup_autoaim->operate_type = 1;
+    ui_g_Ungroup_autoaim->layer = 0;
+    ui_g_Ungroup_autoaim->color = 7;
+    ui_g_Ungroup_autoaim->start_x = 110;
+    ui_g_Ungroup_autoaim->start_y = 680;
+    ui_g_Ungroup_autoaim->width = 2;
+    ui_g_Ungroup_autoaim->font_size = 20;
+    ui_g_Ungroup_autoaim->str_length = 1;
+    strcpy(ui_g_Ungroup_autoaim->string, "A");
+
+
+    ui_proc_string_frame(&ui_g_Ungroup_7);
+    SEND_MESSAGE((uint8_t *) &ui_g_Ungroup_7, sizeof(ui_g_Ungroup_7));
+}
+
+void _ui_update_g_Ungroup_7() {
+    ui_g_Ungroup_7.option.operate_type = 2;
+
+    ui_proc_string_frame(&ui_g_Ungroup_7);
+    SEND_MESSAGE((uint8_t *) &ui_g_Ungroup_7, sizeof(ui_g_Ungroup_7));
+}
+
+void _ui_remove_g_Ungroup_7() {
+    ui_g_Ungroup_7.option.operate_type = 3;
+
+    ui_proc_string_frame(&ui_g_Ungroup_7);
+    SEND_MESSAGE((uint8_t *) &ui_g_Ungroup_7, sizeof(ui_g_Ungroup_7));
+}
+ui_string_frame_t ui_g_Ungroup_8;
+ui_interface_string_t* ui_g_Ungroup_autoaim_flag = &(ui_g_Ungroup_8.option);
+
+void _ui_init_g_Ungroup_8() {
+    ui_g_Ungroup_8.option.figure_name[0] = 0;
+    ui_g_Ungroup_8.option.figure_name[1] = 0;
+    ui_g_Ungroup_8.option.figure_name[2] = 9;
+    ui_g_Ungroup_8.option.operate_type = 1;
+
+    ui_g_Ungroup_autoaim_flag->figure_type = 7;
+    ui_g_Ungroup_autoaim_flag->operate_type = 1;
+    ui_g_Ungroup_autoaim_flag->layer = 0;
+    ui_g_Ungroup_autoaim_flag->color = 3;
+    ui_g_Ungroup_autoaim_flag->start_x = 150;
+    ui_g_Ungroup_autoaim_flag->start_y = 680;
+    ui_g_Ungroup_autoaim_flag->width = 2;
+    ui_g_Ungroup_autoaim_flag->font_size = 20;
+    ui_g_Ungroup_autoaim_flag->str_length = 1;
+
+    if (ui_all_flag.autoaim) {
+        strcpy(ui_g_Ungroup_autoaim_flag->string, "1");
+    } else {
+        strcpy(ui_g_Ungroup_autoaim_flag->string, "0");
+    }
+
+    ui_proc_string_frame(&ui_g_Ungroup_8);
+    SEND_MESSAGE((uint8_t *) &ui_g_Ungroup_8, sizeof(ui_g_Ungroup_8));
+}
+
+void _ui_update_g_Ungroup_8() {
+    ui_g_Ungroup_8.option.operate_type = 2;
+
+    ui_proc_string_frame(&ui_g_Ungroup_8);
+    SEND_MESSAGE((uint8_t *) &ui_g_Ungroup_8, sizeof(ui_g_Ungroup_8));
+}
+
+void _ui_remove_g_Ungroup_8() {
+    ui_g_Ungroup_8.option.operate_type = 3;
+
+    ui_proc_string_frame(&ui_g_Ungroup_8);
+    SEND_MESSAGE((uint8_t *) &ui_g_Ungroup_8, sizeof(ui_g_Ungroup_8));
+}
+
 void ui_init_g_Ungroup() {
     _ui_init_g_Ungroup_0();
     _ui_init_g_Ungroup_1();
@@ -342,6 +423,8 @@ void ui_init_g_Ungroup() {
     _ui_init_g_Ungroup_4();
     _ui_init_g_Ungroup_5();
     _ui_init_g_Ungroup_6();
+    _ui_init_g_Ungroup_7();
+    _ui_init_g_Ungroup_8();
 }
 
 void ui_update_g_Ungroup() {
@@ -352,6 +435,8 @@ void ui_update_g_Ungroup() {
     _ui_update_g_Ungroup_4();
     _ui_update_g_Ungroup_5();
     _ui_update_g_Ungroup_6();
+    _ui_update_g_Ungroup_7();
+    _ui_update_g_Ungroup_8();
 }
 
 void ui_remove_g_Ungroup() {
@@ -362,5 +447,7 @@ void ui_remove_g_Ungroup() {
     _ui_remove_g_Ungroup_4();
     _ui_remove_g_Ungroup_5();
     _ui_remove_g_Ungroup_6();
+    _ui_remove_g_Ungroup_7();
+    _ui_remove_g_Ungroup_8();
 }
 

@@ -11,7 +11,7 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "dvc_MCU_comm.h"
-#include <cstring>
+#include "ui_interface.h"
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -186,8 +186,8 @@ void McuComm::DataProcess(uint8_t* rx_data)
 
                memcpy(&recv_autoaim_data_.autoaim_yaw_ang, &rx_data[2], 4);
 
-               recv_autoaim_data_.is_autoaim_start = rx_data[6];
-
+               ui_all_flag.autoaim = rx_data[6];
+               
                break;
           }
      }

@@ -97,7 +97,7 @@ void Chassis::OperationMode()
         {
             ui_all_flag.chassis = 1;
 
-            SetMaxOmegaSpeed(MAX_OMEGA_SPEED / 2.f);
+            SetMaxOmegaSpeed(MAX_OMEGA_SPEED / 1.5f);
             SetTargetVelocityRotation(MAX_GYROSCOPE_SPEED);
             break;
         }

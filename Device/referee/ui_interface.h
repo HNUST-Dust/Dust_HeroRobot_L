@@ -13,6 +13,7 @@ typedef struct ui_flag
     uint8_t chassis;
     uint8_t reload;
     uint8_t shoot;
+    uint8_t autoaim;
 } ui_flag;
 
 extern int ui_self_id;
