@@ -11,14 +11,17 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "Robot.h"
-#include "ui_interface.h"
+#include "cmsis_os2.h"
+#include "ui_g.h"
+#include <cstdio>
+#include <cstring>
 
 /* Private macros ------------------------------------------------------------*/
 
-#define K_NORM                  1.f / 660.f
-#define C_NORM                  -256.f / 165.f
-#define REMOTE_YAW_RATIO        0.5f
-#define AUTOAIM_YAW_RATIO       150.f
+constexpr float K_NORM              = 1.f / 660.f;
+constexpr float C_NORM              = -256.f / 165.f;
+constexpr float REMOTE_YAW_RATIO    = 0.5f;
+constexpr float AUTOAIM_YAW_RATIO   = 150.f;
 
 /* Private types -------------------------------------------------------------*/
 
@@ -47,7 +50,7 @@ void Robot::Init()
     chassis_.Init();
     
     // 超级电容初始化 
-    // supercap_.Init(&hcan1);
+    // supercap_.Init(&hcan1, 0x100, 0x001);
 
     // 裁判系统
     referee_.Init(&huart6, uart6_callback_function, UART_BUFFER_LENGTH);
@@ -98,7 +101,7 @@ void Robot::Task()
     mcu_autoaim_data_local.autoaim_yaw_ang.f   = 0;
     mcu_autoaim_data_local.is_autoaim_start    = 0;
 
-    uint8_t count = 0;
+    Timer print(20);
 
     for(;;)
     {
@@ -169,6 +172,7 @@ void Robot::Task()
         if (mcu_comm_data_local.keyboard.v)
         {
             gimbal_.motor_yaw_.CanSendSaveZero();
+            osDelay(1000);
         }
         
 
@@ -176,7 +180,12 @@ void Robot::Task()
 
 
         // 设置当前角度差
-        chassis_.SetNowYawRadianDiff(-gimbal_.GetNowYawRadian());
+        float yaw_to_chassis = -gimbal_.GetNowYawRadian();
+        chassis_.SetNowYawRadianDiff(yaw_to_chassis);
+
+        // 更新yaw_to_chassis UI显示
+        snprintf(ui_g_Ungroup_yaw_to_chassis->string, 30, "%.2f", yaw_to_chassis);
+        ui_g_Ungroup_yaw_to_chassis->str_length = strlen(ui_g_Ungroup_yaw_to_chassis->string);
 
         // 设置目标映射速度
         chassis_.SetTargetVxInGimbal((K_NORM * mcu_chassis_data_local.chassis_speed_x + C_NORM) * chassis_.GetMaxOmegaSpeed());
@@ -188,17 +197,19 @@ void Robot::Task()
 
         // 拨弹盘开关
         if((mcu_chassis_data_local.fn1 && mcu_autoaim_data_local.mode == PC_AUTOAIM_MODE_FIRE) || (mcu_comm_data_local.keyboard.f && mcu_comm_data_local.mouse_lr.mouse_l) ||
-          (mcu_comm_data_local.mouse_lr.mouse_r && mcu_comm_data_local.mouse_lr.mouse_l && mcu_autoaim_data_local.mode == PC_AUTOAIM_MODE_FIRE))
+           (mcu_comm_data_local.mouse_lr.mouse_r && mcu_comm_data_local.mouse_lr.mouse_l && mcu_autoaim_data_local.mode == PC_AUTOAIM_MODE_FIRE) || mcu_comm_data_local.keyboard.r)
         {
-            ui_all_flag.reload = 1;
+            strcpy(ui_g_Ungroup_reload_flag->string, "1");
 
             reload_.SetTargetReloadTorque(MAX_RELORD_TORQUE);
+            // reload_.SetTargetReloadOmega(MAX_RELOAD_OMEGA);
         }
         else
         {
-            ui_all_flag.reload = 0;
+            strcpy(ui_g_Ungroup_reload_flag->string, "0");
 
             reload_.SetTargetReloadTorque(0);
+            // reload_.SetTargetReloadOmega(0);
         }
 
         // 底盘模式
@@ -223,17 +234,11 @@ void Robot::Task()
 
         // 用于ui检测是否开摩擦轮
         if (mcu_comm_data_local.mouse_lr.mouse_r || mcu_comm_data_local.keyboard.f) {
-            ui_all_flag.shoot = 1;
+            strcpy(ui_g_Ungroup_shoot_flag->string, "1");
         } else {
-            ui_all_flag.shoot = 0;
+            strcpy(ui_g_Ungroup_shoot_flag->string, "0");
         }
-
-        if (++count > 20)
-        {
-            // printf("%f\n", gimbal_.GetNowYawRadian());
-        }
-
-
+        
         osDelay(pdMS_TO_TICKS(1));
     }
 }

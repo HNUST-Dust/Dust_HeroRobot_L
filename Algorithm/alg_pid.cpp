@@ -279,7 +279,7 @@ void Pid::CalculatePeriodElapsedCallback()
         // 没有积分分离
         if(isnanf(error)) { error = pre_error_ ; }
         if(isnanf(integral_error_)) { integral_error_ = 0.0f; } 
-        integral_error_ = speed_ratio * d_t_ * error;
+        integral_error_ += speed_ratio * d_t_ * error;
         i_out = k_i_ * integral_error_;
     }
     else

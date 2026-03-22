@@ -20,6 +20,7 @@
 #include "cmsis_os2.h"
 #include "bsp_can.h"
 #include "stdio.h"
+#include <math.h>
 
 /* Exported macros -----------------------------------------------------------*/
 
@@ -68,6 +69,10 @@ public:
 
     inline float GetMaxOmegaSpeed();
 
+    inline void SetRefereePowerLimit(uint16_t power_limit);
+
+    inline void SetRefereeBufferEnergy(uint16_t buffer_energy);
+
 protected:
     // 底盘操作模式
     ChassisOperationMode chassis_opreation_mode_ = CHASSIS_OPERATION_MODE_NORMAL;
@@ -87,18 +92,23 @@ protected:
     float yaw_radian_diff_ = 0.0f;
 
     // 斜坡规划参数
-    float max_accel_xy_ = 100.f;
-    float max_accel_r_  = 100.f;
-
-    float now_accel_x_ = 0.0f;
-    float now_accel_y_ = 0.0f;
-    float now_accel_r_ = 0.0f;
+    float max_accel_xy_ = 70.f;
+    float max_accel_r_  = 60.f;
 
     float last_target_vx_ = 0.0f;
     float last_target_vy_ = 0.0f;
     float last_target_rotation_ = 0.0f;
 
     float max_omega_speed_ = 12.f;
+
+    // 功率控制参数
+    uint16_t referee_power_limit_ = 100;
+    uint16_t referee_buffer_energy_ = 60;
+
+    float buffer_target_ = 45.0f;
+    float power_pd_kp_ = 80.0f;
+    float power_pd_kd_ = 30.0f;
+    float last_buffer_sqrt_error_ = 0.0f;
 
     void OperationMode();
 
@@ -107,6 +117,8 @@ protected:
     void SlopePlanning();
 
     void KinematicsInverseResolution();
+
+    void PowerControl();
 
     void OutputToMotor();
 
@@ -185,6 +197,26 @@ inline void Chassis::SetMaxOmegaSpeed(float max_omega_speed)
 inline float Chassis::GetMaxOmegaSpeed()
 {
     return max_omega_speed_;
+}
+
+/**
+ * @brief 设置裁判系统缓冲能量
+ * 
+ * @param buffer_energy 缓冲能量, J
+ */
+inline void Chassis::SetRefereeBufferEnergy(uint16_t buffer_energy)
+{
+    referee_buffer_energy_ = buffer_energy;
+}
+
+/**
+ * @brief 设置裁判系统功率上限
+ * 
+ * @param power_limit 功率上限, W
+ */
+inline void Chassis::SetRefereePowerLimit(uint16_t power_limit)
+{
+    referee_power_limit_ = power_limit;
 }
 
 #endif

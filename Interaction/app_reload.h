@@ -13,6 +13,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 
+#include "alg_pid.h"
 #include "dvc_motor_dm.h"
 #include "FreeRTOS.h"
 #include "cmsis_os2.h"
@@ -21,7 +22,8 @@
 
 /* Exported macros -----------------------------------------------------------*/
 
-#define MAX_RELORD_TORQUE       5.0f
+constexpr float MAX_RELOAD_OMEGA  = 20.0f;
+constexpr float MAX_RELORD_TORQUE = 5.0f;
 
 /* Exported types ------------------------------------------------------------*/
 
@@ -35,6 +37,8 @@ public:
 
     // 拨弹盘1个2006，控制进退弹
     MotorDmNormal motor_reload_;
+
+    Pid reload_omega_pid_;
 
     void Init();
 
@@ -100,7 +104,7 @@ inline void Reload::SetTargetReloadTorque(float target_yaw_torque)
 }
 
 /**
- * @brief 
+ * @brief 获取Reload角速度
  * 
  * @return float 
  */
@@ -110,7 +114,7 @@ inline float Reload::GetTargetReloadOmega()
 }
 
 /**
- * @brief 
+ * @brief 获取Reload力矩
  * 
  * @return float 
  */

@@ -16,6 +16,7 @@ extern ui_interface_line_t *ui_g_Ungroup_chassis_l;
 extern ui_interface_line_t *ui_g_Ungroup_chassis_r;
 extern ui_interface_string_t *ui_g_Ungroup_reload;
 extern ui_interface_string_t *ui_g_Ungroup_shoot;
+extern ui_interface_string_t *ui_g_Ungroup_yaw_to_chassis;
 extern ui_interface_string_t *ui_g_Ungroup_reload_flag;
 extern ui_interface_string_t *ui_g_Ungroup_shoot_flag;
 extern ui_interface_string_t *ui_g_Ungroup_chassis_mode;

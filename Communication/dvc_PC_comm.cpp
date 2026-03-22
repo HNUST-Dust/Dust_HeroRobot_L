@@ -37,7 +37,7 @@ void PcComm::Init()
         .priority = (osPriority_t) osPriorityNormal
     };
     // 启动任务，将 this 传入
-    osThreadNew(PcComm::TaskEntry, this, &KPcCommTaskAttr);
+    // osThreadNew(PcComm::TaskEntry, this, &KPcCommTaskAttr);
 }
 
 /**

@@ -564,8 +564,7 @@ struct RefereeRxDataRobotPowerHeat
     uint16_t reserverd2;
     float reserverd3;
     uint16_t Chassis_Energy_Buffer;
-    uint16_t Booster_17mm_1_Heat;
-    uint16_t Booster_17mm_2_Heat;
+    uint16_t Booster_17mm_Heat;
     uint16_t Booster_42mm_Heat;
     uint16_t CRC_16;
 } __attribute__((packed));
@@ -1814,17 +1813,7 @@ inline uint16_t Referee::GetChassisEnergyBuffer()
  */
 inline uint16_t Referee::GetBooster17mm_1_Heat()
 {
-    return (robot_power_heat_.Booster_17mm_1_Heat);
-}
-
-/**
- * @brief 获取17mm2热量
- *
- * @return uint16_t 17mm2热量
- */
-inline uint16_t Referee::GetBooster17mm_2_Heat()
-{
-    return (robot_power_heat_.Booster_17mm_2_Heat);
+    return (robot_power_heat_.Booster_17mm_Heat);
 }
 
 /**

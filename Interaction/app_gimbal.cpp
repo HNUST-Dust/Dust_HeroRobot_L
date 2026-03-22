@@ -29,9 +29,9 @@ void Gimbal::Init()
     // yaw轴角度环pid
     yaw_angle_pid_.Init(
         17.2f,
+        3.5f,
+        2.55f,
         5.0f,
-        2.65f,
-        1.1f,
         0.f,
         30.0f,
         0.001f,
@@ -44,10 +44,10 @@ void Gimbal::Init()
     );
     // yaw轴速度环pid
     yaw_omega_pid_.Init(
-        0.60f,
+        0.65f,
         0.08f,
-        0.0031f,
-        0.2f,
+        0.0022f,
+        1.0f,
         0.0f,
         9.9f,
         0.001f,

@@ -11,6 +11,8 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "app_reload.h"
+#include "Timer.hpp"
+#include <cstdio>
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -26,6 +28,17 @@
  */
 void Reload::Init()
 {
+    // Reload速度环
+    reload_omega_pid_.Init(
+        1.0f, 
+        0.0f, 
+        0.008f,
+        0.0f,
+        MAX_RELORD_TORQUE * 0.5f,
+        MAX_RELORD_TORQUE,
+        0.001f
+    );
+
     // 拨弹盘4310电机初始化
     motor_reload_.Init(&hcan2, 0x08, 0x07, MOTOR_DM_CONTROL_METHOD_NORMAL_MIT, 12.5f, 30.f, 10.f);
 
@@ -40,7 +53,7 @@ void Reload::Init()
     static const osThreadAttr_t kReloadTaskAttr = 
     {
         .name = "reload_task",
-        .stack_size = 128 * 4,
+        .stack_size = 128 * 6,
         .priority = (osPriority_t) osPriorityNormal
     };
     // 启动任务，将 this 传入
@@ -65,9 +78,13 @@ void Reload::TaskEntry(void *argument)
 void Reload::SelfResolution()
 {
     now_reload_status_ = motor_reload_.GetControlStatus();
-    now_reload_omega_ = motor_reload_.GetNowOmega();
-    now_reload_angle_ = normalize_angle(motor_reload_.GetNowAngle() / PI * 180.f);
+    now_reload_omega_  = motor_reload_.GetNowOmega();
+    now_reload_angle_  = normalize_angle(motor_reload_.GetNowAngle() / PI * 180.f);
     now_reload_torque_ = motor_reload_.GetNowTorque();
+
+    reload_omega_pid_.SetTarget(target_reload_omega_);
+    reload_omega_pid_.SetNow(now_reload_omega_);
+    reload_omega_pid_.CalculatePeriodElapsedCallback();
 }
 
 /**
@@ -76,7 +93,9 @@ void Reload::SelfResolution()
  */
 void Reload::Output()
 {
+    // motor_reload_.SetControlTorque(reload_omega_pid_.GetOut());
     motor_reload_.SetControlTorque(target_reload_torque_);
+
     motor_reload_.Output();
 }
 
@@ -86,6 +105,8 @@ void Reload::Output()
  */
 void Reload::Task()
 {
+    Timer print(20);
+
     for (;;)
     {
         SelfResolution();
@@ -93,6 +114,7 @@ void Reload::Task()
         if (now_reload_status_ == MOTOR_DM_CONTROL_STATUS_ENABLE)
         {
             Output();
+
             if (!NoConnectTimer.IsFinish()) {
                 NoConnectTimer.Finish();
             }

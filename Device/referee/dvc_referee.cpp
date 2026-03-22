@@ -550,10 +550,6 @@ void Referee::Init(UART_HandleTypeDef *huart, Uart_Callback callback_function, u
 {
     uart_init(huart, callback_function, rx_buffer_length);
 
-    ui_all_flag.chassis = 2;
-    ui_all_flag.reload = 0;
-    ui_all_flag.shoot = 0;
-    
     frame_header_ = __Frame_Header;
 
     static const osThreadAttr_t kRefereeTaskAttr = {
@@ -581,18 +577,10 @@ void Referee::TaskEntry(void *argument)
  */
 void Referee::Task()
 {
-    ui_flag last_ui_flag = ui_all_flag;
-
     for (;;)
     {
         ui_init_g_Ungroup();
-        
-        if (last_ui_flag.chassis != ui_all_flag.chassis || last_ui_flag.reload != ui_all_flag.reload || 
-            last_ui_flag.shoot != ui_all_flag.shoot || last_ui_flag.autoaim != ui_all_flag.autoaim)
-        {
-            ui_update_g_Ungroup();
-            last_ui_flag = ui_all_flag;
-        }
+        ui_update_g_Ungroup();
 
         osDelay(pdMS_TO_TICKS(100));
     }
@@ -726,6 +714,11 @@ void Referee::DataProcess(uint8_t *rx_data, uint16_t length)
             case (Referee_Command_ID_ROBOT_STATUS):
             {
                 memcpy(&robot_status_, tmp_buffer->Data, sizeof(RefereeRxDataRobotStatus));
+                break;
+            }
+            case (Referee_Command_ID_ROBOT_POWER_HEAT):
+            {
+                memcpy(&robot_power_heat_, tmp_buffer->Data, sizeof(RefereeRxDataRobotPowerHeat));
                 break;
             }
             case (Referee_Command_ID_ROBOT_BOOSTER):

@@ -143,13 +143,51 @@ void _ui_remove_g_Ungroup_2() {
     SEND_MESSAGE((uint8_t *) &ui_g_Ungroup_2, sizeof(ui_g_Ungroup_2));
 }
 ui_string_frame_t ui_g_Ungroup_3;
-ui_interface_string_t* ui_g_Ungroup_reload_flag = &(ui_g_Ungroup_3.option);
+ui_interface_string_t* ui_g_Ungroup_yaw_to_chassis = &(ui_g_Ungroup_3.option);
 
 void _ui_init_g_Ungroup_3() {
     ui_g_Ungroup_3.option.figure_name[0] = 0;
     ui_g_Ungroup_3.option.figure_name[1] = 0;
     ui_g_Ungroup_3.option.figure_name[2] = 4;
     ui_g_Ungroup_3.option.operate_type = 1;
+
+    ui_g_Ungroup_yaw_to_chassis->figure_type = 7;
+    ui_g_Ungroup_yaw_to_chassis->operate_type = 1;
+    ui_g_Ungroup_yaw_to_chassis->layer = 0;
+    ui_g_Ungroup_yaw_to_chassis->color = 2;
+    ui_g_Ungroup_yaw_to_chassis->start_x = 290;
+    ui_g_Ungroup_yaw_to_chassis->start_y = 800;
+    ui_g_Ungroup_yaw_to_chassis->width = 2;
+    ui_g_Ungroup_yaw_to_chassis->font_size = 20;
+    ui_g_Ungroup_yaw_to_chassis->str_length = 4;
+    strcpy(ui_g_Ungroup_yaw_to_chassis->string, "3.14");
+
+
+    ui_proc_string_frame(&ui_g_Ungroup_3);
+    SEND_MESSAGE((uint8_t *) &ui_g_Ungroup_3, sizeof(ui_g_Ungroup_3));
+}
+
+void _ui_update_g_Ungroup_3() {
+    ui_g_Ungroup_3.option.operate_type = 2;
+
+    ui_proc_string_frame(&ui_g_Ungroup_3);
+    SEND_MESSAGE((uint8_t *) &ui_g_Ungroup_3, sizeof(ui_g_Ungroup_3));
+}
+
+void _ui_remove_g_Ungroup_3() {
+    ui_g_Ungroup_3.option.operate_type = 3;
+
+    ui_proc_string_frame(&ui_g_Ungroup_3);
+    SEND_MESSAGE((uint8_t *) &ui_g_Ungroup_3, sizeof(ui_g_Ungroup_3));
+}
+ui_string_frame_t ui_g_Ungroup_4;
+ui_interface_string_t* ui_g_Ungroup_reload_flag = &(ui_g_Ungroup_4.option);
+
+void _ui_init_g_Ungroup_4() {
+    ui_g_Ungroup_4.option.figure_name[0] = 0;
+    ui_g_Ungroup_4.option.figure_name[1] = 0;
+    ui_g_Ungroup_4.option.figure_name[2] = 5;
+    ui_g_Ungroup_4.option.operate_type = 1;
 
     ui_g_Ungroup_reload_flag->figure_type = 7;
     ui_g_Ungroup_reload_flag->operate_type = 1;
@@ -163,62 +201,12 @@ void _ui_init_g_Ungroup_3() {
 
     strcpy(ui_g_Ungroup_reload_flag->string, "0");
 
-    ui_proc_string_frame(&ui_g_Ungroup_3);
-    SEND_MESSAGE((uint8_t *) &ui_g_Ungroup_3, sizeof(ui_g_Ungroup_3));
-}
-
-void _ui_update_g_Ungroup_3() {
-    ui_g_Ungroup_3.option.operate_type = 2;
-
-    if (ui_all_flag.reload) {
-        strcpy(ui_g_Ungroup_reload_flag->string, "1");
-    } else {
-        strcpy(ui_g_Ungroup_reload_flag->string, "0");
-    }
-
-    ui_proc_string_frame(&ui_g_Ungroup_3);
-    SEND_MESSAGE((uint8_t *) &ui_g_Ungroup_3, sizeof(ui_g_Ungroup_3));
-}
-
-void _ui_remove_g_Ungroup_3() {
-    ui_g_Ungroup_3.option.operate_type = 3;
-
-    ui_proc_string_frame(&ui_g_Ungroup_3);
-    SEND_MESSAGE((uint8_t *) &ui_g_Ungroup_3, sizeof(ui_g_Ungroup_3));
-}
-ui_string_frame_t ui_g_Ungroup_4;
-ui_interface_string_t* ui_g_Ungroup_shoot_flag = &(ui_g_Ungroup_4.option);
-
-void _ui_init_g_Ungroup_4() {
-    ui_g_Ungroup_4.option.figure_name[0] = 0;
-    ui_g_Ungroup_4.option.figure_name[1] = 0;
-    ui_g_Ungroup_4.option.figure_name[2] = 5;
-    ui_g_Ungroup_4.option.operate_type = 1;
-
-    ui_g_Ungroup_shoot_flag->figure_type = 7;
-    ui_g_Ungroup_shoot_flag->operate_type = 1;
-    ui_g_Ungroup_shoot_flag->layer = 0;
-    ui_g_Ungroup_shoot_flag->color = 3;
-    ui_g_Ungroup_shoot_flag->start_x = 150;
-    ui_g_Ungroup_shoot_flag->start_y = 720;
-    ui_g_Ungroup_shoot_flag->width = 2;
-    ui_g_Ungroup_shoot_flag->font_size = 20;
-    ui_g_Ungroup_shoot_flag->str_length = 1;
-
-    strcpy(ui_g_Ungroup_shoot_flag->string, "0");
-
     ui_proc_string_frame(&ui_g_Ungroup_4);
     SEND_MESSAGE((uint8_t *) &ui_g_Ungroup_4, sizeof(ui_g_Ungroup_4));
 }
 
 void _ui_update_g_Ungroup_4() {
     ui_g_Ungroup_4.option.operate_type = 2;
-
-    if (ui_all_flag.shoot) {
-        strcpy(ui_g_Ungroup_shoot_flag->string, "1");
-    } else {
-        strcpy(ui_g_Ungroup_shoot_flag->string, "0");
-    }
 
     ui_proc_string_frame(&ui_g_Ungroup_4);
     SEND_MESSAGE((uint8_t *) &ui_g_Ungroup_4, sizeof(ui_g_Ungroup_4));
@@ -231,7 +219,7 @@ void _ui_remove_g_Ungroup_4() {
     SEND_MESSAGE((uint8_t *) &ui_g_Ungroup_4, sizeof(ui_g_Ungroup_4));
 }
 ui_string_frame_t ui_g_Ungroup_5;
-ui_interface_string_t* ui_g_Ungroup_chassis_mode = &(ui_g_Ungroup_5.option);
+ui_interface_string_t* ui_g_Ungroup_shoot_flag = &(ui_g_Ungroup_5.option);
 
 void _ui_init_g_Ungroup_5() {
     ui_g_Ungroup_5.option.figure_name[0] = 0;
@@ -239,17 +227,17 @@ void _ui_init_g_Ungroup_5() {
     ui_g_Ungroup_5.option.figure_name[2] = 6;
     ui_g_Ungroup_5.option.operate_type = 1;
 
-    ui_g_Ungroup_chassis_mode->figure_type = 7;
-    ui_g_Ungroup_chassis_mode->operate_type = 1;
-    ui_g_Ungroup_chassis_mode->layer = 0;
-    ui_g_Ungroup_chassis_mode->color = 7;
-    ui_g_Ungroup_chassis_mode->start_x = 110;
-    ui_g_Ungroup_chassis_mode->start_y = 800;
-    ui_g_Ungroup_chassis_mode->width = 2;
-    ui_g_Ungroup_chassis_mode->font_size = 20;
-    ui_g_Ungroup_chassis_mode->str_length = 1;
-    strcpy(ui_g_Ungroup_chassis_mode->string, "C");
+    ui_g_Ungroup_shoot_flag->figure_type = 7;
+    ui_g_Ungroup_shoot_flag->operate_type = 1;
+    ui_g_Ungroup_shoot_flag->layer = 0;
+    ui_g_Ungroup_shoot_flag->color = 3;
+    ui_g_Ungroup_shoot_flag->start_x = 150;
+    ui_g_Ungroup_shoot_flag->start_y = 720;
+    ui_g_Ungroup_shoot_flag->width = 2;
+    ui_g_Ungroup_shoot_flag->font_size = 20;
+    ui_g_Ungroup_shoot_flag->str_length = 1;
 
+    strcpy(ui_g_Ungroup_shoot_flag->string, "0");
 
     ui_proc_string_frame(&ui_g_Ungroup_5);
     SEND_MESSAGE((uint8_t *) &ui_g_Ungroup_5, sizeof(ui_g_Ungroup_5));
@@ -269,13 +257,51 @@ void _ui_remove_g_Ungroup_5() {
     SEND_MESSAGE((uint8_t *) &ui_g_Ungroup_5, sizeof(ui_g_Ungroup_5));
 }
 ui_string_frame_t ui_g_Ungroup_6;
-ui_interface_string_t* ui_g_Ungroup_chassis_mode_flag = &(ui_g_Ungroup_6.option);
+ui_interface_string_t* ui_g_Ungroup_chassis_mode = &(ui_g_Ungroup_6.option);
 
 void _ui_init_g_Ungroup_6() {
     ui_g_Ungroup_6.option.figure_name[0] = 0;
     ui_g_Ungroup_6.option.figure_name[1] = 0;
     ui_g_Ungroup_6.option.figure_name[2] = 7;
     ui_g_Ungroup_6.option.operate_type = 1;
+
+    ui_g_Ungroup_chassis_mode->figure_type = 7;
+    ui_g_Ungroup_chassis_mode->operate_type = 1;
+    ui_g_Ungroup_chassis_mode->layer = 0;
+    ui_g_Ungroup_chassis_mode->color = 7;
+    ui_g_Ungroup_chassis_mode->start_x = 110;
+    ui_g_Ungroup_chassis_mode->start_y = 800;
+    ui_g_Ungroup_chassis_mode->width = 2;
+    ui_g_Ungroup_chassis_mode->font_size = 20;
+    ui_g_Ungroup_chassis_mode->str_length = 1;
+    strcpy(ui_g_Ungroup_chassis_mode->string, "C");
+
+
+    ui_proc_string_frame(&ui_g_Ungroup_6);
+    SEND_MESSAGE((uint8_t *) &ui_g_Ungroup_6, sizeof(ui_g_Ungroup_6));
+}
+
+void _ui_update_g_Ungroup_6() {
+    ui_g_Ungroup_6.option.operate_type = 2;
+
+    ui_proc_string_frame(&ui_g_Ungroup_6);
+    SEND_MESSAGE((uint8_t *) &ui_g_Ungroup_6, sizeof(ui_g_Ungroup_6));
+}
+
+void _ui_remove_g_Ungroup_6() {
+    ui_g_Ungroup_6.option.operate_type = 3;
+
+    ui_proc_string_frame(&ui_g_Ungroup_6);
+    SEND_MESSAGE((uint8_t *) &ui_g_Ungroup_6, sizeof(ui_g_Ungroup_6));
+}
+ui_string_frame_t ui_g_Ungroup_7;
+ui_interface_string_t* ui_g_Ungroup_chassis_mode_flag = &(ui_g_Ungroup_7.option);
+
+void _ui_init_g_Ungroup_7() {
+    ui_g_Ungroup_7.option.figure_name[0] = 0;
+    ui_g_Ungroup_7.option.figure_name[1] = 0;
+    ui_g_Ungroup_7.option.figure_name[2] = 8;
+    ui_g_Ungroup_7.option.operate_type = 1;
 
     ui_g_Ungroup_chassis_mode_flag->figure_type = 7;
     ui_g_Ungroup_chassis_mode_flag->operate_type = 1;
@@ -288,72 +314,6 @@ void _ui_init_g_Ungroup_6() {
     ui_g_Ungroup_chassis_mode_flag->str_length = 6;
 
     strcpy(ui_g_Ungroup_chassis_mode_flag->string, "normal");
-
-    ui_proc_string_frame(&ui_g_Ungroup_6);
-    SEND_MESSAGE((uint8_t *) &ui_g_Ungroup_6, sizeof(ui_g_Ungroup_6));
-}
-
-void _ui_update_g_Ungroup_6() {
-    ui_g_Ungroup_6.option.operate_type = 2;
-
-    char chassis_flag[8] = "normal";
-
-    switch (ui_all_flag.chassis)
-    {
-        case 1:
-        {
-            strcpy(chassis_flag, "spin   ");
-            break;
-        }
-        case 2:
-        {
-            strcpy(chassis_flag, "normal");
-            break;
-        }
-        case 3:
-        {
-            strcpy(chassis_flag, "followh");
-            break;
-        }
-        case 4:
-        {
-            strcpy(chassis_flag, "followb");
-            break;
-        }
-    }
-    strcpy(ui_g_Ungroup_chassis_mode_flag->string, chassis_flag);
-
-    ui_proc_string_frame(&ui_g_Ungroup_6);
-    SEND_MESSAGE((uint8_t *) &ui_g_Ungroup_6, sizeof(ui_g_Ungroup_6));
-}
-
-void _ui_remove_g_Ungroup_6() {
-    ui_g_Ungroup_6.option.operate_type = 3;
-
-    ui_proc_string_frame(&ui_g_Ungroup_6);
-    SEND_MESSAGE((uint8_t *) &ui_g_Ungroup_6, sizeof(ui_g_Ungroup_6));
-}
-
-ui_string_frame_t ui_g_Ungroup_7;
-ui_interface_string_t* ui_g_Ungroup_autoaim = &(ui_g_Ungroup_7.option);
-
-void _ui_init_g_Ungroup_7() {
-    ui_g_Ungroup_7.option.figure_name[0] = 0;
-    ui_g_Ungroup_7.option.figure_name[1] = 0;
-    ui_g_Ungroup_7.option.figure_name[2] = 8;
-    ui_g_Ungroup_7.option.operate_type = 1;
-
-    ui_g_Ungroup_autoaim->figure_type = 7;
-    ui_g_Ungroup_autoaim->operate_type = 1;
-    ui_g_Ungroup_autoaim->layer = 0;
-    ui_g_Ungroup_autoaim->color = 7;
-    ui_g_Ungroup_autoaim->start_x = 110;
-    ui_g_Ungroup_autoaim->start_y = 680;
-    ui_g_Ungroup_autoaim->width = 2;
-    ui_g_Ungroup_autoaim->font_size = 20;
-    ui_g_Ungroup_autoaim->str_length = 1;
-    strcpy(ui_g_Ungroup_autoaim->string, "A");
-
 
     ui_proc_string_frame(&ui_g_Ungroup_7);
     SEND_MESSAGE((uint8_t *) &ui_g_Ungroup_7, sizeof(ui_g_Ungroup_7));
@@ -372,8 +332,9 @@ void _ui_remove_g_Ungroup_7() {
     ui_proc_string_frame(&ui_g_Ungroup_7);
     SEND_MESSAGE((uint8_t *) &ui_g_Ungroup_7, sizeof(ui_g_Ungroup_7));
 }
+
 ui_string_frame_t ui_g_Ungroup_8;
-ui_interface_string_t* ui_g_Ungroup_autoaim_flag = &(ui_g_Ungroup_8.option);
+ui_interface_string_t* ui_g_Ungroup_autoaim = &(ui_g_Ungroup_8.option);
 
 void _ui_init_g_Ungroup_8() {
     ui_g_Ungroup_8.option.figure_name[0] = 0;
@@ -381,21 +342,17 @@ void _ui_init_g_Ungroup_8() {
     ui_g_Ungroup_8.option.figure_name[2] = 9;
     ui_g_Ungroup_8.option.operate_type = 1;
 
-    ui_g_Ungroup_autoaim_flag->figure_type = 7;
-    ui_g_Ungroup_autoaim_flag->operate_type = 1;
-    ui_g_Ungroup_autoaim_flag->layer = 0;
-    ui_g_Ungroup_autoaim_flag->color = 3;
-    ui_g_Ungroup_autoaim_flag->start_x = 150;
-    ui_g_Ungroup_autoaim_flag->start_y = 680;
-    ui_g_Ungroup_autoaim_flag->width = 2;
-    ui_g_Ungroup_autoaim_flag->font_size = 20;
-    ui_g_Ungroup_autoaim_flag->str_length = 1;
+    ui_g_Ungroup_autoaim->figure_type = 7;
+    ui_g_Ungroup_autoaim->operate_type = 1;
+    ui_g_Ungroup_autoaim->layer = 0;
+    ui_g_Ungroup_autoaim->color = 7;
+    ui_g_Ungroup_autoaim->start_x = 110;
+    ui_g_Ungroup_autoaim->start_y = 680;
+    ui_g_Ungroup_autoaim->width = 2;
+    ui_g_Ungroup_autoaim->font_size = 20;
+    ui_g_Ungroup_autoaim->str_length = 1;
+    strcpy(ui_g_Ungroup_autoaim->string, "A");
 
-    if (ui_all_flag.autoaim) {
-        strcpy(ui_g_Ungroup_autoaim_flag->string, "1");
-    } else {
-        strcpy(ui_g_Ungroup_autoaim_flag->string, "0");
-    }
 
     ui_proc_string_frame(&ui_g_Ungroup_8);
     SEND_MESSAGE((uint8_t *) &ui_g_Ungroup_8, sizeof(ui_g_Ungroup_8));
@@ -414,6 +371,44 @@ void _ui_remove_g_Ungroup_8() {
     ui_proc_string_frame(&ui_g_Ungroup_8);
     SEND_MESSAGE((uint8_t *) &ui_g_Ungroup_8, sizeof(ui_g_Ungroup_8));
 }
+ui_string_frame_t ui_g_Ungroup_9;
+ui_interface_string_t* ui_g_Ungroup_autoaim_flag = &(ui_g_Ungroup_9.option);
+
+void _ui_init_g_Ungroup_9() {
+    ui_g_Ungroup_9.option.figure_name[0] = 0;
+    ui_g_Ungroup_9.option.figure_name[1] = 0;
+    ui_g_Ungroup_9.option.figure_name[2] = 10;
+    ui_g_Ungroup_9.option.operate_type = 1;
+
+    ui_g_Ungroup_autoaim_flag->figure_type = 7;
+    ui_g_Ungroup_autoaim_flag->operate_type = 1;
+    ui_g_Ungroup_autoaim_flag->layer = 0;
+    ui_g_Ungroup_autoaim_flag->color = 3;
+    ui_g_Ungroup_autoaim_flag->start_x = 150;
+    ui_g_Ungroup_autoaim_flag->start_y = 680;
+    ui_g_Ungroup_autoaim_flag->width = 2;
+    ui_g_Ungroup_autoaim_flag->font_size = 20;
+    ui_g_Ungroup_autoaim_flag->str_length = 1;
+
+    strcpy(ui_g_Ungroup_autoaim_flag->string, "0");
+
+    ui_proc_string_frame(&ui_g_Ungroup_9);
+    SEND_MESSAGE((uint8_t *) &ui_g_Ungroup_9, sizeof(ui_g_Ungroup_9));
+}
+
+void _ui_update_g_Ungroup_9() {
+    ui_g_Ungroup_9.option.operate_type = 2;
+
+    ui_proc_string_frame(&ui_g_Ungroup_9);
+    SEND_MESSAGE((uint8_t *) &ui_g_Ungroup_9, sizeof(ui_g_Ungroup_9));
+}
+
+void _ui_remove_g_Ungroup_9() {
+    ui_g_Ungroup_9.option.operate_type = 3;
+
+    ui_proc_string_frame(&ui_g_Ungroup_9);
+    SEND_MESSAGE((uint8_t *) &ui_g_Ungroup_9, sizeof(ui_g_Ungroup_9));
+}
 
 void ui_init_g_Ungroup() {
     _ui_init_g_Ungroup_0();
@@ -425,6 +420,7 @@ void ui_init_g_Ungroup() {
     _ui_init_g_Ungroup_6();
     _ui_init_g_Ungroup_7();
     _ui_init_g_Ungroup_8();
+    _ui_init_g_Ungroup_9();
 }
 
 void ui_update_g_Ungroup() {
@@ -437,6 +433,7 @@ void ui_update_g_Ungroup() {
     _ui_update_g_Ungroup_6();
     _ui_update_g_Ungroup_7();
     _ui_update_g_Ungroup_8();
+    _ui_update_g_Ungroup_9();
 }
 
 void ui_remove_g_Ungroup() {
@@ -449,5 +446,6 @@ void ui_remove_g_Ungroup() {
     _ui_remove_g_Ungroup_6();
     _ui_remove_g_Ungroup_7();
     _ui_remove_g_Ungroup_8();
+    _ui_remove_g_Ungroup_9();
 }
 

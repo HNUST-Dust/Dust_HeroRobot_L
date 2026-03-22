@@ -80,6 +80,7 @@ include_directories(
         Algorithm
         Bsp
         Communication
+        Controller
         Device
         Device/motors
         Device/referee
@@ -106,6 +107,7 @@ file(
     "Bsp/*.*"
     "Core/*.*"
     "Communication/*.*"
+    "Controller/*.*"
     "Device/*.*"
     "Drivers/*.*"
     "Interaction/*.*"

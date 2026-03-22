@@ -33,6 +33,11 @@ void can1_callback_function(CanRxBuffer* CAN_RxMessage)
 {
     switch (CAN_RxMessage->header.StdId) 
     {
+        // case (0x100):
+        // {
+        //     robot_.supercap_.CanRxCpltCallback(CAN_RxMessage->data);
+        //     break;
+        // }
         case (0x201):
         {
             robot_.chassis_.motor_chassis_1_.CanRxCpltCallback(CAN_RxMessage->data);
@@ -95,6 +100,9 @@ void uart6_callback_function(uint8_t *buffer, uint16_t length)
 
     robot_.mcu_comm_.send_referee_data_.bullet_speed.f = robot_.referee_.GetShootSpeed();
     ui_self_id = robot_.referee_.GetSelfID();
+
+    robot_.chassis_.SetRefereeBufferEnergy(robot_.referee_.GetChassisEnergyBuffer());
+    robot_.chassis_.SetRefereePowerLimit(robot_.referee_.GetSelfChassisPowerMax());
 }
 
 /* Function prototypes -------------------------------------------------------*/
