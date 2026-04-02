@@ -106,8 +106,8 @@ protected:
     uint16_t referee_buffer_energy_ = 60;
 
     float buffer_target_ = 45.0f;
-    float power_pd_kp_ = 80.0f;
-    float power_pd_kd_ = 30.0f;
+    float power_pd_kp_ = 100.0f;
+    float power_pd_kd_ = 35.0f;
     float last_buffer_sqrt_error_ = 0.0f;
 
     void OperationMode();

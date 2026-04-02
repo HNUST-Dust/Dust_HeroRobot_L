@@ -11,6 +11,7 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "app_gimbal.h"
+#include "Timer.hpp"
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -28,11 +29,11 @@ void Gimbal::Init()
 {
     // yaw轴角度环pid
     yaw_angle_pid_.Init(
-        17.2f,
+        15.2f,
         3.5f,
-        2.55f,
-        5.0f,
-        0.f,
+        3.0f,
+        0.8f,
+        0.0f,
         30.0f,
         0.001f,
         0.0f,
@@ -44,10 +45,10 @@ void Gimbal::Init()
     );
     // yaw轴速度环pid
     yaw_omega_pid_.Init(
-        0.65f,
+        0.60f,
         0.08f,
-        0.0022f,
-        1.0f,
+        0.0037f,
+        0.2f,
         0.0f,
         9.9f,
         0.001f,
@@ -145,12 +146,24 @@ void Gimbal::Output()
  */
 void Gimbal::Task()
 {
+    Timer print(20);
+
     for (;;)
     {
-        SelfResolution();
+        motor_yaw_.AlivePeriodElapsedCallback();
+
+        if (motor_yaw_.GetStatus() == MOTOR_DM_STATUS_DISABLE)
+        {
+            now_yaw_status_ = MOTOR_DM_CONTROL_STATUS_DISABLE;
+        }
+        else
+        {
+            now_yaw_status_ = motor_yaw_.GetControlStatus();
+        }
 
         if (now_yaw_status_ == MOTOR_DM_CONTROL_STATUS_ENABLE)
         {
+            SelfResolution();
             Output();
             if (!NoConnectTimer.IsFinish()) {
                 NoConnectTimer.Finish();
@@ -166,9 +179,9 @@ void Gimbal::Task()
                     motor_yaw_.CanSendEnter();
                 }
 
-                now_yaw_status_ = motor_yaw_.GetControlStatus();
-
-                if (now_yaw_status_ == MOTOR_DM_CONTROL_STATUS_ENABLE) {
+                if (motor_yaw_.GetStatus() == MOTOR_DM_STATUS_ENABLE && motor_yaw_.GetControlStatus() == MOTOR_DM_CONTROL_STATUS_ENABLE) {
+                    yaw_angle_pid_.SetIntegralError(0.0f);
+                    yaw_omega_pid_.SetIntegralError(0.0f);
                     NoConnectTimer.Finish();
                 }
             });
@@ -183,13 +196,17 @@ void Gimbal::Task()
                     motor_yaw_.CanSendClearError();
                 }
 
-                now_yaw_status_ = motor_yaw_.GetControlStatus();
-
-                if (now_yaw_status_ == MOTOR_DM_CONTROL_STATUS_ENABLE) {
+                if (motor_yaw_.GetStatus() == MOTOR_DM_STATUS_ENABLE && motor_yaw_.GetControlStatus() == MOTOR_DM_CONTROL_STATUS_ENABLE) {
+                    yaw_angle_pid_.SetIntegralError(0.0f);
+                    yaw_omega_pid_.SetIntegralError(0.0f);
                     NoConnectTimer.Finish();
                 }
             });
         }
+
+        print.Clock([&](){
+            printf("%d,%d,%.4f,%.4f\n", now_yaw_status_, motor_yaw_.GetStatus(), yaw_angle_pid_.GetIntegralError(), yaw_omega_pid_.GetIntegralError());
+        });
         
         osDelay(pdMS_TO_TICKS(1));
     }

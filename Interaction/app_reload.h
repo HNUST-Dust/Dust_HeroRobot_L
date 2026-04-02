@@ -14,6 +14,7 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "alg_pid.h"
+#include "alg_math.h"
 #include "dvc_motor_dm.h"
 #include "FreeRTOS.h"
 #include "cmsis_os2.h"
@@ -38,11 +39,14 @@ public:
     // 拨弹盘1个2006，控制进退弹
     MotorDmNormal motor_reload_;
 
-    Pid reload_omega_pid_;
+    // 拨弹盘位置环PID
+    Pid pid_reload_angle_;
 
     void Init();
 
     void Task();
+
+    void AddTargetAngle(float delta_deg);
 
     inline void SetTargetReloadOmega(float target_reload_omega);
 
@@ -51,10 +55,16 @@ public:
     inline float GetTargetReloadOmega();
 
     inline float GetTargetReloadTorque();
+
+    inline void SetReloadHeat(uint16_t Shooting_heat) {
+        shooting_heat_ = Shooting_heat;
+    }
     
 protected:
     // 掉线保护定时器
     Timer NoConnectTimer{200};
+
+    uint16_t shooting_heat_ = 0;
 
     float now_reload_angle_ = 0.0f;
     float now_reload_omega_ = 0.0f;

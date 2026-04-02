@@ -231,7 +231,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
         } else {
             uart_obj->tx_busy = 0;
         }
-    } 
+    }
 	else {
         uart_obj->tx_busy = 0;
     }
@@ -277,6 +277,5 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 	memset(uart_manage_object->rx_buffer, 0, UART_BUFFER_LENGTH);
 
 	HAL_UARTEx_ReceiveToIdle_DMA(uart_manage_object->uart_handle, uart_manage_object->rx_buffer, uart_manage_object->rx_buffer_length);
-
 }
 

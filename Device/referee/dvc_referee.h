@@ -1084,9 +1084,7 @@ public:
 
     inline uint16_t GetChassisEnergyBuffer();
 
-    inline uint16_t GetBooster17mm_1_Heat();
-
-    inline uint16_t GetBooster17mm_2_Heat();
+    inline uint16_t GetBooster17mmHeat();
 
     inline uint16_t GetBooster42mmHeat();
 
@@ -1811,7 +1809,7 @@ inline uint16_t Referee::GetChassisEnergyBuffer()
  *
  * @return uint16_t 17mm1热量
  */
-inline uint16_t Referee::GetBooster17mm_1_Heat()
+inline uint16_t Referee::GetBooster17mmHeat()
 {
     return (robot_power_heat_.Booster_17mm_Heat);
 }

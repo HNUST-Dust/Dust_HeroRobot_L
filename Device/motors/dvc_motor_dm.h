@@ -16,6 +16,7 @@
 #include "alg_pid.h"
 #include "bsp_can.h"
 #include "alg_math.h"
+#include "Timer.hpp"
 
 /* Exported macros -----------------------------------------------------------*/
 
@@ -301,8 +302,8 @@ protected:
     uint32_t flag_ = 0;
     // 前一时刻的电机接收flag
     uint32_t pre_flag_ = 0;
-    // 在线计数
-    uint16_t alive_heart_ = 0;
+    // 在线检测定时器
+    Timer alive_timer_{50};
 
     // 发送缓冲区
     uint8_t tx_data_[8];
@@ -310,7 +311,7 @@ protected:
     // 读变量
 
     // 电机状态
-    MotorDmStatus motor_dm_status_ = MOTOR_DM_STATUS_ENABLE;
+    MotorDmStatus motor_dm_status_ = MOTOR_DM_STATUS_DISABLE;
     // 电机对外接口信息
     MotorDmRxDataNormal rx_data_;
 

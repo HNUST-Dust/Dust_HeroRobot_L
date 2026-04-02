@@ -11,7 +11,9 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "Robot.h"
+#include "app_reload.h"
 #include "cmsis_os2.h"
+#include "dvc_PC_comm.h"
 #include "ui_g.h"
 #include <cstdio>
 #include <cstring>
@@ -101,6 +103,11 @@ void Robot::Task()
     mcu_autoaim_data_local.autoaim_yaw_ang.f   = 0;
     mcu_autoaim_data_local.is_autoaim_start    = 0;
 
+    // 鼠标左键前一状态，用于上升沿检测
+    uint8_t pre_mouse_l = 0;
+    // fn1前一状态，用于上升沿检测
+    uint8_t pre_fn1 = 0;
+
     Timer print(20);
 
     for(;;)
@@ -119,13 +126,13 @@ void Robot::Task()
         // MCU掉线检测保护
         if(mcu_comm_.GetMcuAliveState() == MCU_ALIVE_STATE_ENABLE)
         {
-            if (mcu_comm_.first_power_on) 
-            {
-                remote_yaw_radian_ = normalize_angle_pm_pi(mcu_comm_data_local.imu_yaw);
-                mcu_comm_.first_power_on = false;
-            }
+            float yaw_rad = normalize_angle_pm_pi(mcu_comm_data_local.imu_yaw);
 
-            gimbal_.SetImuYawAngle(normalize_angle_pm_pi(mcu_comm_data_local.imu_yaw));
+            gimbal_.SetImuYawAngle(yaw_rad);
+
+            // 更新yaw_to_chassis UI显示
+            snprintf(ui_g_Ungroup_yaw_to_chassis->string, 30, "%.2f", yaw_rad);
+            ui_g_Ungroup_yaw_to_chassis->str_length = strlen(ui_g_Ungroup_yaw_to_chassis->string);
         }
         else if (mcu_comm_.GetMcuAliveState() == MCU_ALIVE_STATE_DISABLE) 
         {
@@ -183,10 +190,6 @@ void Robot::Task()
         float yaw_to_chassis = -gimbal_.GetNowYawRadian();
         chassis_.SetNowYawRadianDiff(yaw_to_chassis);
 
-        // 更新yaw_to_chassis UI显示
-        snprintf(ui_g_Ungroup_yaw_to_chassis->string, 30, "%.2f", yaw_to_chassis);
-        ui_g_Ungroup_yaw_to_chassis->str_length = strlen(ui_g_Ungroup_yaw_to_chassis->string);
-
         // 设置目标映射速度
         chassis_.SetTargetVxInGimbal((K_NORM * mcu_chassis_data_local.chassis_speed_x + C_NORM) * chassis_.GetMaxOmegaSpeed());
         chassis_.SetTargetVyInGimbal((K_NORM * mcu_chassis_data_local.chassis_speed_y + C_NORM) * chassis_.GetMaxOmegaSpeed());
@@ -194,22 +197,32 @@ void Robot::Task()
         
         /****************************   模式   ****************************/
 
+        // 拨弹盘开关：鼠标左键或fn1上升沿触发，每次增加60度
+        // bool mouse_l_rising = mcu_comm_data_local.mouse_lr.mouse_l && !pre_mouse_l;
+        // bool fn1_rising = mcu_chassis_data_local.fn1 && !pre_fn1;
+        // if (mouse_l_rising || fn1_rising)
+        // {
+        //     reload_.AddTargetAngle(60.0f);
+        //     strcpy(ui_g_Ungroup_reload_flag->string, "1");
+        // }
+        // else if (!mcu_comm_data_local.mouse_lr.mouse_l && !mcu_chassis_data_local.fn1)
+        // {
+        //     strcpy(ui_g_Ungroup_reload_flag->string, "0");
+        // }
+        // pre_mouse_l = mcu_comm_data_local.mouse_lr.mouse_l;
+        // pre_fn1 = mcu_chassis_data_local.fn1;
 
-        // 拨弹盘开关
-        if((mcu_chassis_data_local.fn1 && mcu_autoaim_data_local.mode == PC_AUTOAIM_MODE_FIRE) || (mcu_comm_data_local.keyboard.f && mcu_comm_data_local.mouse_lr.mouse_l) ||
-           (mcu_comm_data_local.mouse_lr.mouse_r && mcu_comm_data_local.mouse_lr.mouse_l && mcu_autoaim_data_local.mode == PC_AUTOAIM_MODE_FIRE) || mcu_comm_data_local.keyboard.r)
+        if (mcu_comm_data_local.keyboard.f && mcu_comm_data_local.mouse_lr.mouse_r && mcu_comm_data_local.mouse_lr.mouse_l && mcu_autoaim_data_local.mode == PC_AUTOAIM_MODE_FIRE)
         {
-            strcpy(ui_g_Ungroup_reload_flag->string, "1");
-
             reload_.SetTargetReloadTorque(MAX_RELORD_TORQUE);
-            // reload_.SetTargetReloadOmega(MAX_RELOAD_OMEGA);
+        }
+        else if ((mcu_chassis_data_local.fn1 && mcu_chassis_data_local.fn2) || (mcu_comm_data_local.keyboard.f && mcu_comm_data_local.mouse_lr.mouse_l && !mcu_comm_data_local.mouse_lr.mouse_r) || mcu_comm_data_local.keyboard.r)
+        {
+            reload_.SetTargetReloadTorque(MAX_RELORD_TORQUE);   
         }
         else
         {
-            strcpy(ui_g_Ungroup_reload_flag->string, "0");
-
             reload_.SetTargetReloadTorque(0);
-            // reload_.SetTargetReloadOmega(0);
         }
 
         // 底盘模式
@@ -233,11 +246,18 @@ void Robot::Task()
         }
 
         // 用于ui检测是否开摩擦轮
-        if (mcu_comm_data_local.mouse_lr.mouse_r || mcu_comm_data_local.keyboard.f) {
+        if (mcu_comm_data_local.mouse_lr.mouse_r || mcu_comm_data_local.keyboard.f) 
+        {
             strcpy(ui_g_Ungroup_shoot_flag->string, "1");
-        } else {
+        } 
+        else 
+        {
             strcpy(ui_g_Ungroup_shoot_flag->string, "0");
         }
+        
+        // print.Clock([&](){
+        //     printf("%f,%d\n", referee_.GetShootSpeed(), referee_.GetSelfChassisPowerMax());
+        // });
         
         osDelay(pdMS_TO_TICKS(1));
     }

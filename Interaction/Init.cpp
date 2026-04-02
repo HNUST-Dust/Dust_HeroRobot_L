@@ -103,6 +103,7 @@ void uart6_callback_function(uint8_t *buffer, uint16_t length)
 
     robot_.chassis_.SetRefereeBufferEnergy(robot_.referee_.GetChassisEnergyBuffer());
     robot_.chassis_.SetRefereePowerLimit(robot_.referee_.GetSelfChassisPowerMax());
+    robot_.reload_.SetReloadHeat(robot_.referee_.GetBooster42mmHeat());
 }
 
 /* Function prototypes -------------------------------------------------------*/

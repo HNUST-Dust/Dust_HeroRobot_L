@@ -17,19 +17,19 @@
 /* Private macros ------------------------------------------------------------*/
 
 // 速度模式: 0-保守 1-正常 2-激进
-#define CHASSIS_SPEED_MODE 2
+#define CHASSIS_SPEED_MODE 1
 
 #if CHASSIS_SPEED_MODE == 0
 constexpr float MAX_GYROSCOPE_SPEED = 15.f;
 constexpr float MAX_OMEGA_SPEED = 12.f;
 
 #elif CHASSIS_SPEED_MODE == 1
-constexpr float MAX_GYROSCOPE_SPEED = 22.f;
+constexpr float MAX_GYROSCOPE_SPEED = 20.f;
 constexpr float MAX_OMEGA_SPEED = 15.f;
 
 #elif CHASSIS_SPEED_MODE == 2
-constexpr float MAX_GYROSCOPE_SPEED = 30.f;
-constexpr float MAX_OMEGA_SPEED = 20.f;
+constexpr float MAX_GYROSCOPE_SPEED = 26.5f;
+constexpr float MAX_OMEGA_SPEED = 18.f;
 #endif
 
 /* Private types -------------------------------------------------------------*/
@@ -149,6 +149,7 @@ void Chassis::OperationMode()
         }
         default:
         {
+            SetMaxOmegaSpeed(MAX_OMEGA_SPEED);
             SetTargetVelocityRotation(0);
             break;
         }

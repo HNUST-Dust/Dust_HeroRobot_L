@@ -12,7 +12,6 @@
 
 #include "app_reload.h"
 #include "Timer.hpp"
-#include <cstdio>
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -28,16 +27,16 @@
  */
 void Reload::Init()
 {
-    // Reload速度环
-    reload_omega_pid_.Init(
+    // 拨弹盘位置环PID初始化
+    // kp, ki, kd, kf, i_out_max, out_max, dt
+    pid_reload_angle_.Init(
+        8.0f, 
         1.0f, 
+        0.3f, 
         0.0f, 
-        0.008f,
         0.0f,
-        MAX_RELORD_TORQUE * 0.5f,
-        MAX_RELORD_TORQUE,
-        0.001f
-    );
+        MAX_RELORD_TORQUE, 
+        0.001f);
 
     // 拨弹盘4310电机初始化
     motor_reload_.Init(&hcan2, 0x08, 0x07, MOTOR_DM_CONTROL_METHOD_NORMAL_MIT, 12.5f, 30.f, 10.f);
@@ -81,10 +80,7 @@ void Reload::SelfResolution()
     now_reload_omega_  = motor_reload_.GetNowOmega();
     now_reload_angle_  = normalize_angle(motor_reload_.GetNowAngle() / PI * 180.f);
     now_reload_torque_ = motor_reload_.GetNowTorque();
-
-    reload_omega_pid_.SetTarget(target_reload_omega_);
-    reload_omega_pid_.SetNow(now_reload_omega_);
-    reload_omega_pid_.CalculatePeriodElapsedCallback();
+    now_reload_radian_ = normalize_pi(motor_reload_.GetNowAngle());
 }
 
 /**
@@ -93,10 +89,31 @@ void Reload::SelfResolution()
  */
 void Reload::Output()
 {
-    // motor_reload_.SetControlTorque(reload_omega_pid_.GetOut());
-    motor_reload_.SetControlTorque(target_reload_torque_);
+    // 位置环PID计算
+    pid_reload_angle_.SetTarget(target_reload_radian_);
+    pid_reload_angle_.SetNow(now_reload_radian_);
+    pid_reload_angle_.CalculateAnglePid();
+    float pid_torque = pid_reload_angle_.GetOut();
+
+    // 当热量过高时，只有降下来才允许继续拨弹
+    if (shooting_heat_ < 100)  {
+        motor_reload_.SetControlTorque(target_reload_torque_);
+    } else {
+        motor_reload_.SetControlTorque(0);
+    }
 
     motor_reload_.Output();
+}
+
+/**
+ * @brief 增加拨弹盘目标角度
+ * 
+ * @param delta_deg 增量角度（度）
+ */
+void Reload::AddTargetAngle(float delta_deg)
+{
+    target_reload_radian_ += delta_deg * PI / 180.0f;
+    target_reload_radian_ = normalize_pi(target_reload_radian_);
 }
 
 /**
@@ -154,6 +171,10 @@ void Reload::Task()
             });
         }
         
+        // print.Clock([&](){
+        //     printf("%.2f\n", now_reload_torque_);
+        // });
+
         osDelay(pdMS_TO_TICKS(1));
     }
 }

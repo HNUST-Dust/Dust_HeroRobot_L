@@ -299,7 +299,7 @@ void MotorDmNormal::CanSendSaveZero()
  */
 void MotorDmNormal::AlivePeriodElapsedCallback()
 {
-    if(++alive_heart_ >= 50)
+    alive_timer_.Clock([&]()
     {
         // 判断该时间段内是否接收过电机数据
         if (flag_ == pre_flag_)
@@ -314,9 +314,7 @@ void MotorDmNormal::AlivePeriodElapsedCallback()
         }
 
         pre_flag_ = flag_;
-
-        alive_heart_ = 0;
-    }
+    });
 }
 
 /**
